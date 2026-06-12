@@ -1,0 +1,32 @@
+{
+  "name": "@kkskcs/pi-diff-inline",
+  "version": "0.1.0",
+  "description": "Render diffs inline in the pi conversation stream",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/extensions/diff-inline/index.js",
+  "types": "./dist/extensions/diff-inline/index.d.ts",
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "prepublishOnly": "tsc"
+  },
+  "pi": {
+    "extensions": ["./dist/extensions/diff-inline/index.js"]
+  },
+  "dependencies": {
+    "diff": "^8.0.3"
+  },
+  "peerDependencies": {
+    "@earendil-works/pi-coding-agent": "*",
+    "@earendil-works/pi-tui": "*"
+  },
+  "devDependencies": {
+    "typescript": "5.8.3",
+    "@earendil-works/pi-coding-agent": "^0.79.1",
+    "@earendil-works/pi-tui": "^0.79.1",
+    "@sinclair/typebox": "^0.34.0",
+    "vitest": "^3.2.3"
+  }
+}
