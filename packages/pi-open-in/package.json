@@ -4,7 +4,7 @@
   "description": "Open current directory in finder, terminal, or split pane",
   "license": "MIT",
   "type": "module",
-  "main": "./dist/index.js",
+  "main": "./dist/extensions/open-in/index.js",
   "types": "./dist/index.d.ts",
   "files": ["dist"],
   "scripts": {
@@ -12,7 +12,7 @@
     "prepublishOnly": "tsc"
   },
   "pi": {
-    "extensions": ["./dist/index.js"]
+    "extensions": ["./dist/extensions/open-in/index.js"]
   },
   "peerDependencies": {
     "@earendil-works/pi-coding-agent": "*",
