@@ -76,6 +76,7 @@ export default function openIn(pi: ExtensionAPI) {
         let selectList = new SelectList(toItems(filtered), Math.min(filtered.length, 10), {
           selectedPrefix: (t) => theme.fg("accent", t),
           selectedText: (t) => theme.fg("accent", t),
+          description: (t) => theme.fg("dim", t),
           scrollInfo: (t) => theme.fg("dim", t),
           noMatch: (t) => theme.fg("warning", t),
         });
@@ -88,12 +89,13 @@ export default function openIn(pi: ExtensionAPI) {
 
         function rebuild() {
           filtered = query ? actions.filter(a => fuzzyMatch(query, a.id)) : actions;
-          queryText.text = query ? theme.fg("accent", `> ${query}`) : theme.fg("dim", "> type to filter...");
+          queryText.setText(query ? theme.fg("accent", `> ${query}`) : theme.fg("dim", "> type to filter..."));
 
           container.removeChild(selectList);
           selectList = new SelectList(toItems(filtered), Math.min(filtered.length, 10), {
             selectedPrefix: (t) => theme.fg("accent", t),
             selectedText: (t) => theme.fg("accent", t),
+            description: (t) => theme.fg("dim", t),
             scrollInfo: (t) => theme.fg("dim", t),
             noMatch: (t) => theme.fg("warning", t),
           });

@@ -4,7 +4,8 @@
   "description": "Pi packages monorepo",
   "license": "MIT",
   "scripts": {
-    "build": "pnpm -r run build"
+    "build": "pnpm -r run build",
+    "clean": "pnpm -r exec rm -rf dist"
   },
   "engines": {
     "node": ">=18"
