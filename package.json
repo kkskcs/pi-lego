@@ -3,6 +3,9 @@
   "private": true,
   "description": "Pi packages monorepo",
   "license": "MIT",
+  "scripts": {
+    "build": "pnpm -r run build"
+  },
   "engines": {
     "node": ">=18"
   }

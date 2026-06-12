@@ -6,10 +6,16 @@ Pi package monorepo.
 
 | Package | Description |
 |--------|------|
+| [@kkskcs/pi-open-in](./packages/pi-open-in) | Open current directory in finder, terminal, or split pane |
 
 ## Setup
 
 ```bash
 pnpm install
 ```
-p
+
+## Build
+
+```bash
+pnpm run build
+```

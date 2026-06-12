@@ -9,6 +9,5 @@ pnpm-lock.yaml
 .idea/
 specs/
 designs/
-devLogs/
-session-data.json
+devlogs/
 session-data.json

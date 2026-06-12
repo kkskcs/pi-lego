@@ -1,0 +1,136 @@
+import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
+import { DynamicBorder } from "@earendil-works/pi-coding-agent";
+import { Container, SelectList, type SelectItem, Text } from "@earendil-works/pi-tui";
+
+import type { Action, PlatformProvider } from "./types.js";
+import { darwinProvider } from "./platform/darwin.js";
+
+function getPlatform(): PlatformProvider {
+  switch (process.platform) {
+    case "darwin":
+      return darwinProvider;
+
+    default:
+      return darwinProvider;
+  }
+}
+
+function buildActions(platform: PlatformProvider): Action[] {
+  const actions: Action[] = [];
+
+  if (platform.canSplit()) {
+    actions.push(
+      { id: "split-down", label: "split-down", exec: (cwd) => platform.split("down", cwd) },
+      { id: "split-right", label: "split-right", exec: (cwd) => platform.split("right", cwd) },
+      { id: "split-up", label: "split-up", exec: (cwd) => platform.split("up", cwd) },
+      { id: "split-left", label: "split-left", exec: (cwd) => platform.split("left", cwd) },
+    );
+  }
+
+  actions.push(
+    { id: "terminal", label: "terminal", exec: (cwd) => platform.openTerminal(cwd) },
+    { id: "finder", label: "finder", exec: (cwd) => platform.openFinder(cwd) },
+  );
+
+  return actions;
+}
+
+function fuzzyMatch(query: string, target: string): boolean {
+  const q = query.toLowerCase();
+  const t = target.toLowerCase();
+  let qi = 0;
+
+  for (let ti = 0; ti < t.length && qi < q.length; ti++) {
+    if (t[ti] === q[qi]) qi++;
+  }
+
+  return qi === q.length;
+}
+
+export default function openIn(pi: ExtensionAPI) {
+
+  pi.registerCommand("open-in", {
+    description: "Open current directory in another app",
+    handler: async (_args, ctx) => {
+      const platform = getPlatform();
+      const actions = buildActions(platform);
+
+      const choice = await ctx.ui.custom<string | null>((tui, theme, _kb, done) => {
+        let query = "";
+        let filtered = actions;
+
+        const toItems = (list: Action[]): SelectItem[] =>
+          list.map(a => ({ value: a.id, label: a.label }));
+
+        const container = new Container();
+        container.addChild(new DynamicBorder((s: string) => theme.fg("accent", s)));
+
+        const queryText = new Text("", 1, 0);
+        container.addChild(queryText);
+
+        let selectList = new SelectList(toItems(filtered), Math.min(filtered.length, 10), {
+          selectedPrefix: (t) => theme.fg("accent", t),
+          selectedText: (t) => theme.fg("accent", t),
+          scrollInfo: (t) => theme.fg("dim", t),
+          noMatch: (t) => theme.fg("warning", t),
+        });
+        selectList.onSelect = (item) => done(item.value);
+        selectList.onCancel = () => done(null);
+        container.addChild(selectList);
+
+        container.addChild(new Text(theme.fg("dim", "↑↓ navigate • enter select • esc cancel • type to filter"), 1, 0));
+        container.addChild(new DynamicBorder((s: string) => theme.fg("accent", s)));
+
+        function rebuild() {
+          filtered = query ? actions.filter(a => fuzzyMatch(query, a.id)) : actions;
+          queryText.text = query ? theme.fg("accent", `> ${query}`) : theme.fg("dim", "> type to filter...");
+
+          container.removeChild(selectList);
+          selectList = new SelectList(toItems(filtered), Math.min(filtered.length, 10), {
+            selectedPrefix: (t) => theme.fg("accent", t),
+            selectedText: (t) => theme.fg("accent", t),
+            scrollInfo: (t) => theme.fg("dim", t),
+            noMatch: (t) => theme.fg("warning", t),
+          });
+          selectList.onSelect = (item) => done(item.value);
+          selectList.onCancel = () => done(null);
+          container.children.splice(2, 0, selectList);
+          tui.requestRender();
+        }
+
+        rebuild();
+
+        return {
+          render: (w: number) => container.render(w),
+          invalidate: () => container.invalidate(),
+          handleInput: (data: string) => {
+            if (data === "\x7f" || data === "\b") {
+              query = query.slice(0, -1);
+              rebuild();
+            } else if (data.length === 1 && data >= " ") {
+              query += data;
+              rebuild();
+            } else {
+              selectList.handleInput(data);
+              tui.requestRender();
+            }
+          },
+        };
+      });
+
+      if (!choice) return;
+
+      const action = actions.find(a => a.id === choice);
+
+      if (!action) return;
+
+      try {
+        await action.exec(ctx.cwd);
+        ctx.ui.notify(`Opened ${action.label}.`, "info");
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : String(e);
+        ctx.ui.notify(msg, "error");
+      }
+    },
+  });
+}

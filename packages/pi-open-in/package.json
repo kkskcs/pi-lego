@@ -1,0 +1,23 @@
+{
+  "name": "@kkskcs/pi-open-in",
+  "version": "0.1.0",
+  "description": "Open current directory in finder, terminal, or split pane",
+  "license": "MIT",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc",
+    "prepublishOnly": "tsc"
+  },
+  "pi": {
+    "extensions": ["./dist/index.js"]
+  },
+  "peerDependencies": {
+    "@earendil-works/pi-coding-agent": "*",
+    "@earendil-works/pi-tui": "*"
+  },
+  "devDependencies": {
+    "typescript": "5.8.3"
+  }
+}
