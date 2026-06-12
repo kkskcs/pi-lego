@@ -14,7 +14,7 @@ app — finder, a new terminal window, or a split pane.
 ## Install
 
 ```bash
-npm install @kkskcs/pi-open-in
+pi install npm:@kkskcs/pi-open-in
 ```
 
 ## Supported Terminals

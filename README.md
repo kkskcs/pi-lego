@@ -32,10 +32,3 @@ pnpm link --global @kkskcs/pi-open-in
 
 Changes in the source will be reflected after `pnpm run build`.
 
-## Adding a Package
-
-```bash
-mkdir -p packages/<name>/src
-```
-
-Packages are discovered automatically via `pnpm-workspace.yaml`.
