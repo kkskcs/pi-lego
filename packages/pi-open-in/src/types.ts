@@ -1,7 +1,7 @@
 export type Direction = "up" | "down" | "left" | "right";
 
 export interface PlatformProvider {
-  canSplit(): boolean;
+  supportedSplitDirections(): Direction[];
   openFinder(cwd: string): Promise<void>;
   openTerminal(cwd: string): Promise<void>;
   split(direction: Direction, cwd: string): Promise<void>;

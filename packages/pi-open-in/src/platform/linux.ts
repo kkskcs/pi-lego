@@ -9,12 +9,25 @@ function detectTerminal(): string {
   return "unknown";
 }
 
-const SPLIT_TERMINALS = ["tmux", "kitty", "WezTerm"];
 
 export const linuxProvider: PlatformProvider = {
 
-  canSplit() {
-    return SPLIT_TERMINALS.includes(detectTerminal());
+  supportedSplitDirections() {
+    const term = detectTerminal();
+    const allDirs: Direction[] = ["down", "right", "up", "left"];
+    const basicDirs: Direction[] = ["down", "right"];
+
+    switch (term) {
+      case "tmux":
+      case "WezTerm":
+        return allDirs;
+
+      case "kitty":
+        return basicDirs;
+
+      default:
+        return [];
+    }
   },
 
   openFinder(cwd) {

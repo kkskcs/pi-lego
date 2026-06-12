@@ -42,12 +42,28 @@ const TERM_APP_NAME: Record<string, string> = {
   WarpTerminal: "Warp",
 };
 
-const SPLIT_TERMINALS = ["tmux", "ghostty", "iTerm.app", "iTerm2", "kitty", "WezTerm"];
 
 export const darwinProvider: PlatformProvider = {
 
-  canSplit() {
-    return SPLIT_TERMINALS.includes(detectTerminal());
+  supportedSplitDirections() {
+    const term = detectTerminal();
+    const allDirs: Direction[] = ["down", "right", "up", "left"];
+    const basicDirs: Direction[] = ["down", "right"];
+
+    switch (term) {
+      case "tmux":
+      case "ghostty":
+      case "WezTerm":
+        return allDirs;
+
+      case "iTerm.app":
+      case "iTerm2":
+      case "kitty":
+        return basicDirs;
+
+      default:
+        return [];
+    }
   },
 
   openFinder(cwd) {

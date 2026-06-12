@@ -9,12 +9,24 @@ function detectTerminal(): string {
   return "unknown";
 }
 
-const SPLIT_TERMINALS = ["wt", "WezTerm"];
 
 export const win32Provider: PlatformProvider = {
 
-  canSplit() {
-    return SPLIT_TERMINALS.includes(detectTerminal());
+  supportedSplitDirections() {
+    const term = detectTerminal();
+    const allDirs: Direction[] = ["down", "right", "up", "left"];
+    const basicDirs: Direction[] = ["down", "right"];
+
+    switch (term) {
+      case "WezTerm":
+        return allDirs;
+
+      case "wt":
+        return basicDirs;
+
+      default:
+        return [];
+    }
   },
 
   openFinder(cwd) {

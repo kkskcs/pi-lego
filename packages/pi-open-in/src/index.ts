@@ -23,13 +23,8 @@ function getPlatform(): PlatformProvider {
 function buildActions(platform: PlatformProvider): Action[] {
   const actions: Action[] = [];
 
-  if (platform.canSplit()) {
-    actions.push(
-      { id: "split-down", label: "split-down", exec: (cwd) => platform.split("down", cwd) },
-      { id: "split-right", label: "split-right", exec: (cwd) => platform.split("right", cwd) },
-      { id: "split-up", label: "split-up", exec: (cwd) => platform.split("up", cwd) },
-      { id: "split-left", label: "split-left", exec: (cwd) => platform.split("left", cwd) },
-    );
+  for (const dir of platform.supportedSplitDirections()) {
+    actions.push({ id: `split-${dir}`, label: `split-${dir}`, exec: (cwd) => platform.split(dir, cwd) });
   }
 
   actions.push(
