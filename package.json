@@ -1,5 +1,5 @@
 {
-  "name": "pi-lego",
+  "name": "@kkskcs/pi-lego",
   "private": true,
   "description": "Pi packages monorepo",
   "license": "MIT",

@@ -13,3 +13,5 @@ devlogs/
 tickets/
 .playwright-mcp/
 session-data.json
+AGENTS.md
+.pi
