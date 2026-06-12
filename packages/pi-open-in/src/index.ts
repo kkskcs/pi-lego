@@ -4,14 +4,19 @@ import { Container, SelectList, type SelectItem, Text } from "@earendil-works/pi
 
 import type { Action, PlatformProvider } from "./types.js";
 import { darwinProvider } from "./platform/darwin.js";
+import { linuxProvider } from "./platform/linux.js";
+import { win32Provider } from "./platform/win32.js";
 
 function getPlatform(): PlatformProvider {
   switch (process.platform) {
     case "darwin":
       return darwinProvider;
 
+    case "win32":
+      return win32Provider;
+
     default:
-      return darwinProvider;
+      return linuxProvider;
   }
 }
 
