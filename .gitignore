@@ -10,4 +10,6 @@ pnpm-lock.yaml
 specs/
 designs/
 devlogs/
+tickets/
+.playwright-mcp/
 session-data.json

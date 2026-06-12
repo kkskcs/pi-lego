@@ -91,7 +91,10 @@ export const darwinProvider: PlatformProvider = {
 
     switch (term) {
       case "tmux": {
-        const flag = direction === "right" || direction === "left" ? "-h" : "-v";
+        const flag = direction === "right" ? "-h"
+                   : direction === "left" ? "-hb"
+                   : direction === "up" ? "-vb"
+                   : "-v";
         return run(`tmux split-window ${flag} -c ${esc}`);
       }
 
@@ -108,7 +111,8 @@ export const darwinProvider: PlatformProvider = {
       }
 
       case "WezTerm": {
-        const flag = direction === "down" || direction === "up" ? "--bottom" : "--right";
+        const flagMap = { down: "--bottom", up: "--top", right: "--right", left: "--left" } as const;
+        const flag = flagMap[direction];
         return run(`wezterm cli split-pane ${flag} --cwd ${esc}`);
       }
 

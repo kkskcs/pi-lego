@@ -51,7 +51,8 @@ export const win32Provider: PlatformProvider = {
       }
 
       case "WezTerm": {
-        const flag = direction === "down" || direction === "up" ? "--bottom" : "--right";
+        const flagMap = { down: "--bottom", up: "--top", right: "--right", left: "--left" } as const;
+        const flag = flagMap[direction];
         return run(`wezterm cli split-pane ${flag} --cwd ${esc}`);
       }
 
