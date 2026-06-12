@@ -1,0 +1,9 @@
+{
+  "name": "pi-lego",
+  "private": true,
+  "description": "Pi packages monorepo",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  }
+}

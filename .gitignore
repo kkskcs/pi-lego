@@ -1,0 +1,14 @@
+node_modules/
+dist/
+*.tgz
+
+.DS_Store
+*.log
+
+pnpm-lock.yaml
+.idea/
+specs/
+designs/
+devLogs/
+session-data.json
+session-data.json
