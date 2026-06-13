@@ -34,7 +34,8 @@ export function renderDiff(input: RenderDiffInput): RenderDiffOutput {
 
   if (mode === "split") {
     const pane = Math.max(10, Math.floor((width - 3) / 2));
-    lines.push(padRight("old", pane) + " │ " + "new");
+    const rightPaneWidth = width - pane - 3;
+    lines.push(padRight("old", pane) + " │ " + padRight("new", rightPaneWidth));
     lines.push(...splitRows(diffData, width, theme));
     return { mode, lines };
   }
@@ -46,7 +47,7 @@ export function renderDiff(input: RenderDiffInput): RenderDiffOutput {
 function tint(theme: RendererTheme, entry: DiffEntry, text: string): string {
   if (entry.kind === "add") return theme.bg("toolSuccessBg", theme.fg("success", text));
   if (entry.kind === "remove") return theme.bg("toolErrorBg", theme.fg("error", text));
-  return text;
+  return theme.bg("toolPendingBg", theme.fg("toolOutput", text));
 }
 
 function gutterMarker(entry: DiffEntry): string {
@@ -150,6 +151,7 @@ function unifiedRows(diffData: DiffData, width: number, theme: RendererTheme): s
 
 function splitRows(diffData: DiffData, width: number, theme: RendererTheme): string[] {
   const pane = Math.max(10, Math.floor((width - 3) / 2));
+  const rightPaneWidth = width - pane - 3;
   const rows: string[] = [];
   const separator = " │ ";
 
@@ -169,8 +171,8 @@ function splitRows(diffData: DiffData, width: number, theme: RendererTheme): str
 
   const blankLeft = `▌  ${" ".repeat(lw)} │ `;
   const blankRight = `▌  ${" ".repeat(rw)} │ `;
-  const blankLeftPane = padRight(theme.fg("dim", blankLeft), pane);
-  const blankRightPane = padRight(theme.fg("dim", blankRight), pane);
+  const blankLeftPane = theme.bg("toolPendingBg", padRight(theme.fg("dim", blankLeft), pane));
+  const blankRightPane = theme.bg("toolPendingBg", padRight(theme.fg("dim", blankRight), rightPaneWidth));
 
   let i = 0;
 
@@ -195,9 +197,9 @@ function splitRows(diffData: DiffData, width: number, theme: RendererTheme): str
       const leftPrefix = `▌  ${fmtLeft((e as any).oldLine)} │ `;
       const rightPrefix = `▌  ${fmtRight((e as any).newLine)} │ `;
       const rawLeft = truncateToWidth(leftPrefix + content, pane);
-      const rawRight = truncateToWidth(rightPrefix + content, pane);
+      const rawRight = truncateToWidth(rightPrefix + content, rightPaneWidth);
       const left = tint(theme, e, rawLeft + " ".repeat(Math.max(0, pane - visibleWidth(rawLeft))));
-      const right = tint(theme, e, rawRight + " ".repeat(Math.max(0, pane - visibleWidth(rawRight))));
+      const right = tint(theme, e, rawRight + " ".repeat(Math.max(0, rightPaneWidth - visibleWidth(rawRight))));
       rows.push(left + separator + right);
       i++;
       continue;
@@ -239,8 +241,8 @@ function splitRows(diffData: DiffData, width: number, theme: RendererTheme): str
       if (rightItem) {
         const prefix = `▌+ ${fmtRight((rightItem.entry as any).newLine)} │ `;
         const content = inlineText(rightItem.entry, rightItem.globalIndex, diffData, theme);
-        rightLines = wrapWithHangingIndent(prefix, content, pane, {
-          tint: (text) => tint(theme, rightItem.entry, padRight(text, pane)),
+        rightLines = wrapWithHangingIndent(prefix, content, rightPaneWidth, {
+          tint: (text) => tint(theme, rightItem.entry, padRight(text, rightPaneWidth)),
         });
       } else {
         rightLines = [blankRightPane];

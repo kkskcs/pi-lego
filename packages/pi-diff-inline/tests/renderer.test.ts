@@ -265,7 +265,7 @@ describe("renderDiff", () => {
 
   describe("context lines", () => {
 
-    it("does not apply bg to context lines", () => {
+    it("applies toolPendingBg to context lines", () => {
       const bgCalls: string[] = [];
       const theme = {
         fg: (_s: string, t: string) => t,
@@ -281,7 +281,7 @@ describe("renderDiff", () => {
       };
 
       renderDiff({ diffData: data, width: 80, mode: "unified", theme });
-      expect(bgCalls).toHaveLength(0);
+      expect(bgCalls).toContain("toolPendingBg");
     });
   });
 
