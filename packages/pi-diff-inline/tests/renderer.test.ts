@@ -188,7 +188,6 @@ describe("renderDiff", () => {
       expect(result.lines).toHaveLength(0);
     });
   });
-});
 
   describe("hunk headers", () => {
 
@@ -227,8 +226,101 @@ describe("renderDiff", () => {
         theme: makeTheme(),
       });
 
-      for (const line of result.lines) {
+      const contentLines = result.lines.slice(2);
+
+      for (const line of contentLines) {
         expect(visibleWidth(line)).toBe(80);
       }
     });
   });
+
+  describe("inline token highlighting", () => {
+
+    it("applies bold to changed spans", () => {
+      const boldCalls: string[] = [];
+      const theme = {
+        fg: (_s: string, t: string) => t,
+        bg: (_s: string, t: string) => t,
+        bold: (t: string) => { boldCalls.push(t); return `[B]${t}[/B]`; },
+      };
+
+      const data: DiffData = {
+        entries: [
+          { kind: "remove", oldLine: 1, text: "hello world" },
+          { kind: "add", newLine: 1, text: "hello universe" },
+        ],
+        stats: { added: 1, removed: 1, context: 0 },
+        inlineDiffs: [{
+          removeEntryIndex: 0,
+          addEntryIndex: 1,
+          removeSpans: [{ kind: "equal", text: "hello " }, { kind: "remove", text: "world" }],
+          addSpans: [{ kind: "equal", text: "hello " }, { kind: "add", text: "universe" }],
+        }],
+      };
+
+      const result = renderDiff({ diffData: data, width: 80, mode: "unified", theme });
+      expect(boldCalls.length).toBeGreaterThan(0);
+    });
+  });
+
+  describe("context lines", () => {
+
+    it("does not apply bg to context lines", () => {
+      const bgCalls: string[] = [];
+      const theme = {
+        fg: (_s: string, t: string) => t,
+        bg: (s: string, t: string) => { bgCalls.push(s); return t; },
+        bold: (t: string) => t,
+      };
+
+      const data: DiffData = {
+        entries: [
+          { kind: "context", oldLine: 1, newLine: 1, text: "unchanged" },
+        ],
+        stats: { added: 0, removed: 0, context: 1 },
+      };
+
+      renderDiff({ diffData: data, width: 80, mode: "unified", theme });
+      expect(bgCalls).toHaveLength(0);
+    });
+  });
+
+  describe("header", () => {
+
+    it("shows stats in header", () => {
+      const result = renderDiff({
+        diffData: simpleDiffData(),
+        width: 80,
+        mode: "unified",
+        theme: makeTheme(),
+      });
+
+      const header = result.lines[0];
+      expect(header).toContain("+1");
+      expect(header).toContain("-1");
+    });
+
+    it("shows old/new column headers in split mode", () => {
+      const result = renderDiff({
+        diffData: simpleDiffData(),
+        width: 100,
+        mode: "split",
+        theme: makeTheme(),
+      });
+
+      const colHeader = result.lines.find((l) => l.includes("old") && l.includes("new"));
+      expect(colHeader).toBeDefined();
+    });
+
+    it("has blank line between header and content", () => {
+      const result = renderDiff({
+        diffData: simpleDiffData(),
+        width: 80,
+        mode: "unified",
+        theme: makeTheme(),
+      });
+
+      expect(result.lines[1]?.trim()).toBe("");
+    });
+  });
+});

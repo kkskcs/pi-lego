@@ -28,17 +28,25 @@ export function renderDiff(input: RenderDiffInput): RenderDiffOutput {
     return { mode, lines: [] };
   }
 
+  const hunkCount = diffData.entries.filter((e) => e.kind === "hunk").length || 1;
+  const header = `+${diffData.stats.added} -${diffData.stats.removed} • ${hunkCount} hunk`;
+  const lines: string[] = [theme.fg("dim", header), ""];
+
   if (mode === "split") {
-    return { mode, lines: splitRows(diffData, width, theme) };
+    const pane = Math.max(10, Math.floor((width - 3) / 2));
+    lines.push(padRight("old", pane) + " │ " + "new");
+    lines.push(...splitRows(diffData, width, theme));
+    return { mode, lines };
   }
 
-  return { mode, lines: unifiedRows(diffData, width, theme) };
+  lines.push(...unifiedRows(diffData, width, theme));
+  return { mode, lines };
 }
 
 function tint(theme: RendererTheme, entry: DiffEntry, text: string): string {
   if (entry.kind === "add") return theme.bg("toolSuccessBg", theme.fg("success", text));
   if (entry.kind === "remove") return theme.bg("toolErrorBg", theme.fg("error", text));
-  return theme.bg("toolPendingBg", theme.fg("toolOutput", text));
+  return text;
 }
 
 function gutterMarker(entry: DiffEntry): string {
@@ -73,8 +81,8 @@ function inlineText(entry: DiffEntry, index: number, diffData: DiffData, theme: 
 
 function renderSpans(spans: DiffSpan[], theme: RendererTheme): string {
   return spans.map((s) => {
-    if (s.kind === "add") return theme.fg("success", s.text);
-    if (s.kind === "remove") return theme.fg("error", s.text);
+    if (s.kind === "add") return theme.bold(theme.fg("success", s.text));
+    if (s.kind === "remove") return theme.bold(theme.fg("error", s.text));
     return s.text;
   }).join("");
 }
@@ -161,8 +169,8 @@ function splitRows(diffData: DiffData, width: number, theme: RendererTheme): str
 
   const blankLeft = `▌  ${" ".repeat(lw)} │ `;
   const blankRight = `▌  ${" ".repeat(rw)} │ `;
-  const blankLeftPane = theme.bg("toolPendingBg", padRight(theme.fg("dim", blankLeft), pane));
-  const blankRightPane = theme.bg("toolPendingBg", padRight(theme.fg("dim", blankRight), pane));
+  const blankLeftPane = padRight(theme.fg("dim", blankLeft), pane);
+  const blankRightPane = padRight(theme.fg("dim", blankRight), pane);
 
   let i = 0;
 
