@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+import { visibleWidth } from "@earendil-works/pi-tui";
 import { renderDiff, type RenderDiffInput, type RenderDiffOutput } from "../src/extensions/diff-inline/renderer.js";
 import type { DiffData } from "../src/extensions/diff-inline/types.js";
 
@@ -89,7 +90,7 @@ describe("renderDiff", () => {
       });
 
       for (const line of result.lines) {
-        expect(line.length).toBeLessThanOrEqual(60);
+        expect(visibleWidth(line)).toBeLessThanOrEqual(60);
       }
     });
   });

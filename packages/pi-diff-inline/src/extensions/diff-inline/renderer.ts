@@ -1,3 +1,4 @@
+import { visibleWidth, truncateToWidth, wrapTextWithAnsi } from "@earendil-works/pi-tui";
 import type { DiffData, DiffEntry, DiffSpan, InlineDiff } from "./types.js";
 
 export type DiffRenderMode = "unified" | "split";
@@ -27,133 +28,185 @@ export function renderDiff(input: RenderDiffInput): RenderDiffOutput {
     return { mode, lines: [] };
   }
 
-  const lines: string[] = [];
-  const groups = groupByFile(diffData.entries);
+  if (mode === "split") {
+    return { mode, lines: splitRows(diffData, width, theme) };
+  }
 
-  for (const group of groups) {
-    if (group.filePath) {
-      lines.push(renderFileHeader(group.filePath, width, theme));
-    }
+  return { mode, lines: unifiedRows(diffData, width, theme) };
+}
 
-    const bodyEntries: Array<{ entry: DiffEntry; originalIndex: number }> = [];
+function tint(theme: RendererTheme, entry: DiffEntry, text: string): string {
+  if (entry.kind === "add") return theme.bg("toolSuccessBg", theme.fg("success", text));
+  if (entry.kind === "remove") return theme.bg("toolErrorBg", theme.fg("error", text));
+  return theme.bg("toolPendingBg", theme.fg("toolOutput", text));
+}
 
-    for (let idx = 0; idx < group.entries.length; idx++) {
-      const e = group.entries[idx]!;
-      if (e.kind !== "meta") {
-        bodyEntries.push({ entry: e, originalIndex: group.startIndex + idx });
+function gutterMarker(entry: DiffEntry): string {
+  if (entry.kind === "add") return "+";
+  if (entry.kind === "remove") return "-";
+  return " ";
+}
+
+function lineNo(entry: DiffEntry): string {
+  if (entry.kind === "add") return String((entry as any).newLine);
+  if (entry.kind === "remove") return String((entry as any).oldLine);
+  if (entry.kind === "context") return String((entry as any).newLine);
+  return "";
+}
+
+function inlineText(entry: DiffEntry, index: number, diffData: DiffData, theme: RendererTheme): string {
+  const text = "text" in entry ? entry.text : "";
+
+  if (!diffData.inlineDiffs || (entry.kind !== "add" && entry.kind !== "remove")) {
+    return text;
+  }
+
+  const pair = diffData.inlineDiffs.find((d) =>
+    entry.kind === "remove" ? d.removeEntryIndex === index : d.addEntryIndex === index,
+  );
+
+  if (!pair) return text;
+
+  const spans = entry.kind === "remove" ? pair.removeSpans : pair.addSpans;
+  return renderSpans(spans, theme);
+}
+
+function renderSpans(spans: DiffSpan[], theme: RendererTheme): string {
+  return spans.map((s) => {
+    if (s.kind === "add") return theme.fg("success", s.text);
+    if (s.kind === "remove") return theme.fg("error", s.text);
+    return s.text;
+  }).join("");
+}
+
+function wrapWithHangingIndent(
+  prefix: string,
+  content: string,
+  width: number,
+  options: { tint?: (text: string) => string } = {},
+): string[] {
+  const tintFn = options.tint ?? ((t: string) => t);
+
+  const combined = prefix + content;
+
+  if (visibleWidth(combined) <= width) {
+    return [tintFn(combined)];
+  }
+
+  const prefixWidth = visibleWidth(prefix);
+  const contentWidth = Math.max(1, width - prefixWidth);
+  const wrapped = wrapTextWithAnsi(content, contentWidth);
+
+  if (wrapped.length === 0) {
+    return [tintFn(truncateToWidth(prefix, width))];
+  }
+
+  const indent = " ".repeat(prefixWidth);
+
+  return wrapped.map((line, i) =>
+    tintFn(truncateToWidth(i === 0 ? prefix + line : indent + line, width)),
+  );
+}
+
+function padRight(line: string, width: number): string {
+  const vis = visibleWidth(line);
+  return vis >= width ? line : line + " ".repeat(width - vis);
+}
+
+function unifiedRows(diffData: DiffData, width: number, theme: RendererTheme): string[] {
+  const rows: string[] = [];
+
+  for (const [i, e] of diffData.entries.entries()) {
+    if (e.kind === "meta") {
+      if ("filePath" in e && e.filePath) {
+        rows.push(padRight(theme.fg("accent", `── ${e.filePath} ──`), width));
       }
-    }
-
-    if (mode === "split") {
-      lines.push(...renderSplit(bodyEntries, diffData.inlineDiffs, width, theme));
-    } else {
-      lines.push(...renderUnified(bodyEntries, diffData.inlineDiffs, width, theme));
-    }
-  }
-
-  return { mode, lines };
-}
-
-type FileGroup = {
-  filePath?: string;
-  entries: DiffEntry[];
-  startIndex: number;
-};
-
-function groupByFile(entries: DiffEntry[]): FileGroup[] {
-  const groups: FileGroup[] = [];
-  let current: FileGroup | undefined;
-
-  for (let i = 0; i < entries.length; i++) {
-    const entry = entries[i]!;
-
-    if (entry.kind === "meta" && "filePath" in entry && entry.filePath) {
-      current = { filePath: entry.filePath, entries: [], startIndex: i };
-      groups.push(current);
-      current.entries.push(entry);
       continue;
     }
 
-    if (!current) {
-      current = { entries: [], startIndex: i };
-      groups.push(current);
-    }
-
-    current.entries.push(entry);
-  }
-
-  return groups;
-}
-
-function renderFileHeader(filePath: string, width: number, theme: RendererTheme): string {
-  const label = ` ${filePath} `;
-  const remaining = Math.max(0, width - label.length - 4);
-  const left = "──";
-  const right = "─".repeat(Math.max(0, remaining));
-  return pad(theme.fg("accent", `${left}${label}${right}`), width);
-}
-
-type IndexedEntry = { entry: DiffEntry; originalIndex: number };
-
-function renderUnified(items: IndexedEntry[], inlineDiffs: InlineDiff[] | undefined, width: number, theme: RendererTheme): string[] {
-  const lines: string[] = [];
-
-  for (const { entry, originalIndex } of items) {
-    if (entry.kind === "hunk") {
-      lines.push(pad(theme.fg("dim", entry.text), width));
+    if (e.kind === "hunk") {
+      rows.push(padRight(theme.fg("dim", e.text), width));
       continue;
     }
 
-    const oldNum = formatLineNum(entry.kind === "add" ? undefined : (entry as any).oldLine);
-    const newNum = formatLineNum(entry.kind === "remove" ? undefined : (entry as any).newLine);
-    const gutter = `${oldNum}│${newNum}│ `;
-    const text = renderEntryText(entry, originalIndex, inlineDiffs, theme);
-    const row = `${theme.fg("dim", gutter)}${text}`;
+    const prefix = `▌${gutterMarker(e)} ${lineNo(e)} │ `;
+    const content = inlineText(e, i, diffData, theme);
+    const tinted = wrapWithHangingIndent(prefix, content, width, {
+      tint: (text) => tint(theme, e, text),
+    });
 
-    lines.push(pad(applyLineBg(entry, row, width, theme), width));
+    rows.push(...tinted);
   }
 
-  return lines;
+  return rows;
 }
 
-function renderSplit(items: IndexedEntry[], inlineDiffs: InlineDiff[] | undefined, width: number, theme: RendererTheme): string[] {
-  const lines: string[] = [];
-  const separatorWidth = 3;
-  const paneWidth = Math.max(10, Math.floor((width - separatorWidth) / 2));
-  const separator = theme.fg("dim", " │ ");
+function splitRows(diffData: DiffData, width: number, theme: RendererTheme): string[] {
+  const pane = Math.max(10, Math.floor((width - 3) / 2));
+  const rows: string[] = [];
+  const separator = " │ ";
+
+  let maxOld = 1;
+  let maxNew = 1;
+
+  for (const e of diffData.entries) {
+    if ("oldLine" in e && typeof e.oldLine === "number" && e.oldLine > maxOld) maxOld = e.oldLine;
+    if ("newLine" in e && typeof e.newLine === "number" && e.newLine > maxNew) maxNew = e.newLine;
+  }
+
+  const lw = String(maxOld).length;
+  const rw = String(maxNew).length;
+
+  function fmtLeft(num: number): string { return String(num).padStart(lw, " "); }
+  function fmtRight(num: number): string { return String(num).padStart(rw, " "); }
+
+  const blankLeft = `▌  ${" ".repeat(lw)} │ `;
+  const blankRight = `▌  ${" ".repeat(rw)} │ `;
+  const blankLeftPane = theme.bg("toolPendingBg", padRight(theme.fg("dim", blankLeft), pane));
+  const blankRightPane = theme.bg("toolPendingBg", padRight(theme.fg("dim", blankRight), pane));
 
   let i = 0;
 
-  while (i < items.length) {
-    const { entry, originalIndex } = items[i]!;
+  while (i < diffData.entries.length) {
+    const e = diffData.entries[i]!;
 
-    if (entry.kind === "hunk") {
-      lines.push(pad(theme.fg("dim", entry.text), width));
+    if (e.kind === "meta") {
+      if ("filePath" in e && e.filePath) {
+        rows.push(padRight(theme.fg("accent", `── ${e.filePath} ──`), width));
+      }
       i++;
       continue;
     }
 
-    if (entry.kind === "context") {
-      const num = formatLineNum((entry as any).oldLine);
-      const text = entry.text;
-      const leftCell = pad(`${theme.fg("dim", `${num}│`)} ${text}`, paneWidth);
-      const numR = formatLineNum((entry as any).newLine);
-      const rightCell = pad(`${theme.fg("dim", `${numR}│`)} ${text}`, paneWidth);
-      lines.push(pad(`${leftCell}${separator}${rightCell}`, width));
+    if (e.kind === "hunk") {
+      rows.push(padRight(theme.fg("dim", e.text), width));
       i++;
       continue;
     }
 
-    const removes: Array<{ entry: DiffEntry; originalIndex: number }> = [];
-    const adds: Array<{ entry: DiffEntry; originalIndex: number }> = [];
+    if (e.kind === "context") {
+      const content = inlineText(e, i, diffData, theme);
+      const leftPrefix = `▌  ${fmtLeft((e as any).oldLine)} │ `;
+      const rightPrefix = `▌  ${fmtRight((e as any).newLine)} │ `;
+      const rawLeft = truncateToWidth(leftPrefix + content, pane);
+      const rawRight = truncateToWidth(rightPrefix + content, pane);
+      const left = tint(theme, e, rawLeft + " ".repeat(Math.max(0, pane - visibleWidth(rawLeft))));
+      const right = tint(theme, e, rawRight + " ".repeat(Math.max(0, pane - visibleWidth(rawRight))));
+      rows.push(left + separator + right);
+      i++;
+      continue;
+    }
 
-    while (i < items.length && items[i]!.entry.kind === "remove") {
-      removes.push(items[i]!);
+    const removes: Array<{ entry: DiffEntry; globalIndex: number }> = [];
+    const adds: Array<{ entry: DiffEntry; globalIndex: number }> = [];
+
+    while (i < diffData.entries.length && diffData.entries[i]!.kind === "remove") {
+      removes.push({ entry: diffData.entries[i]!, globalIndex: i });
       i++;
     }
 
-    while (i < items.length && items[i]!.entry.kind === "add") {
-      adds.push(items[i]!);
+    while (i < diffData.entries.length && diffData.entries[i]!.kind === "add") {
+      adds.push({ entry: diffData.entries[i]!, globalIndex: i });
       i++;
     }
 
@@ -163,76 +216,39 @@ function renderSplit(items: IndexedEntry[], inlineDiffs: InlineDiff[] | undefine
       const leftItem = removes[offset];
       const rightItem = adds[offset];
 
-      const leftCell = leftItem
-        ? pad(applyLineBg(leftItem.entry, renderSplitCell(leftItem.entry, leftItem.originalIndex, inlineDiffs, paneWidth, theme), paneWidth, theme), paneWidth)
-        : " ".repeat(paneWidth);
+      let leftLines: string[];
 
-      const rightCell = rightItem
-        ? pad(applyLineBg(rightItem.entry, renderSplitCell(rightItem.entry, rightItem.originalIndex, inlineDiffs, paneWidth, theme), paneWidth, theme), paneWidth)
-        : " ".repeat(paneWidth);
+      if (leftItem) {
+        const prefix = `▌- ${fmtLeft((leftItem.entry as any).oldLine)} │ `;
+        const content = inlineText(leftItem.entry, leftItem.globalIndex, diffData, theme);
+        leftLines = wrapWithHangingIndent(prefix, content, pane, {
+          tint: (text) => tint(theme, leftItem.entry, padRight(text, pane)),
+        });
+      } else {
+        leftLines = [blankLeftPane];
+      }
 
-      lines.push(pad(`${leftCell}${separator}${rightCell}`, width));
+      let rightLines: string[];
+
+      if (rightItem) {
+        const prefix = `▌+ ${fmtRight((rightItem.entry as any).newLine)} │ `;
+        const content = inlineText(rightItem.entry, rightItem.globalIndex, diffData, theme);
+        rightLines = wrapWithHangingIndent(prefix, content, pane, {
+          tint: (text) => tint(theme, rightItem.entry, padRight(text, pane)),
+        });
+      } else {
+        rightLines = [blankRightPane];
+      }
+
+      const lineCount = Math.max(leftLines.length, rightLines.length);
+
+      for (let l = 0; l < lineCount; l++) {
+        const left = leftLines[l] ?? blankLeftPane;
+        const right = rightLines[l] ?? blankRightPane;
+        rows.push(left + separator + right);
+      }
     }
   }
 
-  return lines;
-}
-
-function renderSplitCell(entry: DiffEntry, globalIndex: number, inlineDiffs: InlineDiff[] | undefined, paneWidth: number, theme: RendererTheme): string {
-  const lineNum = entry.kind === "remove" ? (entry as any).oldLine : (entry as any).newLine;
-  const num = formatLineNum(lineNum);
-  const text = renderEntryText(entry, globalIndex, inlineDiffs, theme);
-  return truncate(`${theme.fg("dim", `${num}│`)} ${text}`, paneWidth);
-}
-
-function renderEntryText(entry: DiffEntry, globalIndex: number, inlineDiffs: InlineDiff[] | undefined, theme: RendererTheme): string {
-  if (!inlineDiffs || entry.kind === "context" || entry.kind === "hunk" || entry.kind === "meta") {
-    return entry.text;
-  }
-
-  const inline = inlineDiffs.find((d) =>
-    entry.kind === "remove" ? d.removeEntryIndex === globalIndex : d.addEntryIndex === globalIndex,
-  );
-
-  if (!inline) return entry.text;
-
-  const spans = entry.kind === "remove" ? inline.removeSpans : inline.addSpans;
-  return renderSpans(spans, entry.kind, theme);
-}
-
-function renderSpans(spans: DiffSpan[], lineKind: "add" | "remove", theme: RendererTheme): string {
-  return spans.map((span) => {
-    if (span.kind === "equal") return span.text;
-
-    if (lineKind === "add" && span.kind === "add") {
-      return theme.bold(theme.bg("addHighlight", span.text));
-    }
-
-    if (lineKind === "remove" && span.kind === "remove") {
-      return theme.bold(theme.bg("removeHighlight", span.text));
-    }
-
-    return span.text;
-  }).join("");
-}
-
-function applyLineBg(entry: DiffEntry, text: string, width: number, theme: RendererTheme): string {
-  if (entry.kind === "add") return theme.bg("addBg", pad(text, width));
-  if (entry.kind === "remove") return theme.bg("removeBg", pad(text, width));
-  return text;
-}
-
-function formatLineNum(num: number | undefined): string {
-  if (num === undefined) return "    ";
-  return String(num).padStart(4, " ");
-}
-
-function pad(text: string, width: number): string {
-  if (text.length >= width) return text.slice(0, width);
-  return text + " ".repeat(width - text.length);
-}
-
-function truncate(text: string, width: number): string {
-  if (text.length <= width) return text;
-  return text.slice(0, width);
+  return rows;
 }

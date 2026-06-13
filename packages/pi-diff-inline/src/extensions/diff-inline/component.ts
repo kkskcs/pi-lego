@@ -32,6 +32,7 @@ export class DiffInlineComponent {
   render(width: number): string[] {
     if (this.cachedLines && this.cachedWidth === width) return this.cachedLines;
 
+
     const lines: string[] = [];
 
     if (this.options.label) {

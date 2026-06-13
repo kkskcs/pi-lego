@@ -24,7 +24,7 @@ type DiffInlineParams = {
   contextLines?: number;
 };
 
-let globalMode: DiffRenderMode = "unified";
+let globalMode: DiffRenderMode = "split";
 const activeComponents: Set<DiffInlineComponent> = new Set();
 
 export default function (pi: ExtensionAPI) {
@@ -49,12 +49,12 @@ export default function (pi: ExtensionAPI) {
       };
     },
 
-    renderResult(result: any, _options: any, theme: any, context: any) {
+    renderResult(result: any, options: any, theme: any, _context: any) {
       const diffData = result?.details?.diffData as DiffData | undefined;
 
       const rendererTheme: RendererTheme = {
         fg: (style: string, text: string) => theme.fg(style, text),
-        bg: (style: string, text: string) => theme.bg?.(style, text) ?? text,
+        bg: (style: string, text: string) => theme.bg(style, text),
         bold: (text: string) => theme.bold?.(text) ?? text,
       };
 
@@ -62,16 +62,15 @@ export default function (pi: ExtensionAPI) {
         return new DiffInlineComponent({
           diffData: { entries: [], stats: { added: 0, removed: 0, context: 0 } },
           theme: rendererTheme,
-          expanded: false,
+          expanded: true,
           mode: globalMode,
         });
       }
 
-
       const component = new DiffInlineComponent({
         diffData,
         theme: rendererTheme,
-        expanded: context?.expanded ?? false,
+        expanded: options?.expanded ?? true,
         mode: globalMode,
         label: result?.details?.label,
       });
