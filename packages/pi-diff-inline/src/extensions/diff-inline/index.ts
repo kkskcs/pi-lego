@@ -14,6 +14,7 @@ const parameters = Type.Object({
   newText: Type.Optional(Type.String({ description: "New text for comparison" })),
   label: Type.Optional(Type.String({ description: "Header label shown above the diff" })),
   contextLines: Type.Optional(Type.Number({ description: "Context lines for text-to-text mode (default: 3)" })),
+  expandable: Type.Optional(Type.Boolean({ description: "Enable Ctrl+O collapse toggle (default: false — always show full diff)" })),
 });
 
 type DiffInlineParams = {
@@ -22,6 +23,7 @@ type DiffInlineParams = {
   newText?: string;
   label?: string;
   contextLines?: number;
+  expandable?: boolean;
 };
 
 let globalMode: DiffRenderMode = "split";
@@ -45,7 +47,7 @@ export default function (pi: ExtensionAPI) {
       const summary = `↳ diff +${diffData!.stats.added} -${diffData!.stats.removed}`;
       return {
         content: [{ type: "text" as const, text: summary }],
-        details: { diffData: diffData!, label: params.label } as any,
+        details: { diffData: diffData!, label: params.label, expandable: params.expandable } as any,
       };
     },
 
@@ -63,6 +65,7 @@ export default function (pi: ExtensionAPI) {
           diffData: { entries: [], stats: { added: 0, removed: 0, context: 0 } },
           theme: rendererTheme,
           expanded: true,
+          expandable: false,
           mode: globalMode,
         });
       }
@@ -71,6 +74,7 @@ export default function (pi: ExtensionAPI) {
         diffData,
         theme: rendererTheme,
         expanded: options?.expanded ?? true,
+        expandable: result?.details?.expandable ?? false,
         mode: globalMode,
         label: result?.details?.label,
       });

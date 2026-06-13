@@ -5,6 +5,7 @@ export interface DiffInlineComponentOptions {
   diffData: DiffData;
   theme: RendererTheme;
   expanded: boolean;
+  expandable?: boolean;
   mode: DiffRenderMode;
   label?: string;
 }
@@ -39,7 +40,7 @@ export class DiffInlineComponent {
       lines.push(pad(this.options.theme.fg("toolTitle", this.options.label), width));
     }
 
-    if (!this.options.expanded) {
+    if (this.options.expandable && !this.options.expanded) {
       lines.push(this.renderSummary(width));
       this.cachedWidth = width;
       this.cachedLines = lines;

@@ -32,6 +32,7 @@ describe("DiffInlineComponent", () => {
       theme: makeTheme(),
       expanded: false,
       mode: "unified",
+      expandable: true,
     });
 
     const lines = component.render(80);
@@ -117,5 +118,46 @@ describe("DiffInlineComponent", () => {
     const hasLabel = lines.some((l) => l.includes("My Diff"));
 
     expect(hasLabel).toBe(true);
+  });
+
+  it("always renders full when expandable is false", () => {
+    const component = new DiffInlineComponent({
+      diffData: simpleDiffData(),
+      theme: makeTheme(),
+      expanded: false,
+      expandable: false,
+      mode: "unified",
+    });
+
+    const lines = component.render(80);
+
+    expect(lines.length).toBeGreaterThan(1);
+  });
+
+  it("respects expanded when expandable is true", () => {
+    const component = new DiffInlineComponent({
+      diffData: simpleDiffData(),
+      theme: makeTheme(),
+      expanded: false,
+      expandable: true,
+      mode: "unified",
+    });
+
+    const lines = component.render(80);
+
+    expect(lines.length).toBe(1);
+  });
+
+  it("defaults expandable to false", () => {
+    const component = new DiffInlineComponent({
+      diffData: simpleDiffData(),
+      theme: makeTheme(),
+      expanded: false,
+      mode: "unified",
+    });
+
+    const lines = component.render(80);
+
+    expect(lines.length).toBeGreaterThan(1);
   });
 });
