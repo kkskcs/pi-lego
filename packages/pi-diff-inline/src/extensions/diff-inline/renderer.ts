@@ -200,7 +200,7 @@ function splitRows(diffData: DiffData, width: number, theme: RendererTheme): str
       const rawRight = truncateToWidth(rightPrefix + content, rightPaneWidth);
       const left = tint(theme, e, rawLeft + " ".repeat(Math.max(0, pane - visibleWidth(rawLeft))));
       const right = tint(theme, e, rawRight + " ".repeat(Math.max(0, rightPaneWidth - visibleWidth(rawRight))));
-      rows.push(left + separator + right);
+      rows.push(padRight(left + separator + right, width));
       i++;
       continue;
     }
@@ -253,7 +253,7 @@ function splitRows(diffData: DiffData, width: number, theme: RendererTheme): str
       for (let l = 0; l < lineCount; l++) {
         const left = leftLines[l] ?? blankLeftPane;
         const right = rightLines[l] ?? blankRightPane;
-        rows.push(left + separator + right);
+        rows.push(padRight(left + separator + right, width));
       }
     }
   }
