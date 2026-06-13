@@ -26,6 +26,41 @@ export function buildDiff(oldText: string, newText: string, options?: BuildDiffO
   };
 }
 
+export interface MergeDiffItem {
+  oldText: string;
+  newText: string;
+  label?: string;
+}
+
+export function mergeDiffs(items: MergeDiffItem[], options?: BuildDiffOptions): DiffData {
+  const allEntries: DiffEntry[] = [];
+  let totalAdded = 0;
+  let totalRemoved = 0;
+  let totalContext = 0;
+
+  for (const item of items) {
+    const data = buildDiff(item.oldText, item.newText, options);
+
+    if (data.entries.length === 0) continue;
+
+    if (allEntries.length > 0) {
+      const separator = item.label ?? `block ${items.indexOf(item) + 1}`;
+      allEntries.push({ kind: "meta", text: separator, filePath: item.label ?? "" });
+    } else if (item.label) {
+      allEntries.push({ kind: "meta", text: item.label, filePath: item.label });
+    }
+
+    allEntries.push(...data.entries);
+    totalAdded += data.stats.added;
+    totalRemoved += data.stats.removed;
+    totalContext += data.stats.context;
+  }
+
+  return {
+    entries: allEntries,
+    stats: { added: totalAdded, removed: totalRemoved, context: totalContext },
+  };
+}
 function buildEntries(oldText: string, newText: string, contextLines: number): DiffEntry[] {
   const parts = Diff.diffLines(oldText, newText);
   const entries: DiffEntry[] = [];

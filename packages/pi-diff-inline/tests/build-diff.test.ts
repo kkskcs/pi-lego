@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { buildDiff } from "../src/extensions/diff-inline/build-diff.js";
+import { buildDiff, mergeDiffs } from "../src/extensions/diff-inline/build-diff.js";
 
 describe("buildDiff", () => {
 
@@ -88,5 +88,44 @@ describe("buildDiff", () => {
 
     expect(result.stats.added).toBe(0);
     expect(result.stats.removed).toBe(2);
+  });
+});
+
+describe("mergeDiffs", () => {
+
+  it("merges multiple text pairs into one DiffData", () => {
+
+    const result = mergeDiffs([
+      { oldText: "aaa", newText: "bbb" },
+      { oldText: "ccc", newText: "ddd" },
+    ]);
+
+    expect(result.stats.added).toBe(2);
+    expect(result.stats.removed).toBe(2);
+    expect(result.entries.length).toBeGreaterThan(2);
+  });
+
+  it("adds meta entry with label between blocks", () => {
+
+    const result = mergeDiffs([
+      { oldText: "aaa", newText: "bbb", label: "file1.ts" },
+      { oldText: "ccc", newText: "ddd", label: "file2.ts" },
+    ]);
+
+    const metas = result.entries.filter((e: any) => e.kind === "meta");
+    expect(metas.length).toBe(2);
+    expect(metas[0].filePath).toBe("file1.ts");
+    expect(metas[1].filePath).toBe("file2.ts");
+  });
+
+  it("skips blocks with no changes", () => {
+
+    const result = mergeDiffs([
+      { oldText: "same", newText: "same" },
+      { oldText: "aaa", newText: "bbb" },
+    ]);
+
+    expect(result.stats.added).toBe(1);
+    expect(result.stats.removed).toBe(1);
   });
 });

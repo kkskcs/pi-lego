@@ -1,7 +1,7 @@
 import { Type } from "@sinclair/typebox";
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { parseDiff } from "./parser.js";
-import { buildDiff } from "./build-diff.js";
+import { buildDiff, mergeDiffs } from "./build-diff.js";
 import { DiffInlineComponent } from "./component.js";
 import type { DiffData } from "./types.js";
 import type { RendererTheme, DiffRenderMode } from "./renderer.js";
@@ -12,6 +12,11 @@ const parameters = Type.Object({
   diffText: Type.Optional(Type.String({ description: "Unified diff text (git diff, diff -u, etc.)" })),
   oldText: Type.Optional(Type.String({ description: "Original text for comparison" })),
   newText: Type.Optional(Type.String({ description: "New text for comparison" })),
+  diffs: Type.Optional(Type.Array(Type.Object({
+    oldText: Type.String({ description: "Original text" }),
+    newText: Type.String({ description: "New text" }),
+    label: Type.Optional(Type.String({ description: "Label for this diff block" })),
+  }), { description: "Array of text pairs for multi-block comparison" })),
   label: Type.Optional(Type.String({ description: "Header label shown above the diff" })),
   contextLines: Type.Optional(Type.Number({ description: "Context lines for text-to-text mode (default: 3)" })),
   expandable: Type.Optional(Type.Boolean({ description: "Enable Ctrl+O collapse toggle (default: false — always show full diff)" })),
@@ -21,6 +26,7 @@ type DiffInlineParams = {
   diffText?: string;
   oldText?: string;
   newText?: string;
+  diffs?: Array<{ oldText: string; newText: string; label?: string }>;
   label?: string;
   contextLines?: number;
   expandable?: boolean;
@@ -95,13 +101,16 @@ export default function (pi: ExtensionAPI) {
 function resolveInput(params: DiffInlineParams): { diffData?: DiffData; error?: string } {
   const hasDiffText = typeof params.diffText === "string" && params.diffText.length > 0;
   const hasTextPair = typeof params.oldText === "string" && typeof params.newText === "string";
+  const hasDiffs = Array.isArray(params.diffs) && params.diffs.length > 0;
 
-  if (hasDiffText && hasTextPair) {
-    return { error: "Provide either diffText or oldText/newText, not both." };
+  const modeCount = [hasDiffText, hasTextPair, hasDiffs].filter(Boolean).length;
+
+  if (modeCount > 1) {
+    return { error: "Provide only one of: diffText, oldText/newText, or diffs." };
   }
 
-  if (!hasDiffText && !hasTextPair) {
-    return { error: "Provide diffText or oldText/newText." };
+  if (modeCount === 0) {
+    return { error: "Provide diffText, oldText/newText, or diffs." };
   }
 
   if (hasDiffText) {
@@ -110,6 +119,26 @@ function resolveInput(params: DiffInlineParams): { diffData?: DiffData; error?: 
     }
 
     return { diffData: parseDiff(params.diffText!) };
+  }
+
+  if (hasDiffs) {
+    const totalBytes = params.diffs!.reduce(
+      (sum, d) => sum + Buffer.byteLength(d.oldText, "utf8") + Buffer.byteLength(d.newText, "utf8"), 0,
+    );
+
+    if (totalBytes > MAX_INPUT_BYTES) {
+      return { error: "Input exceeds 10MB limit." };
+    }
+
+    const diffData = mergeDiffs(params.diffs!, {
+      contextLines: params.contextLines ?? 3,
+    });
+
+    if (diffData.entries.length === 0) {
+      return { error: "No changes detected." };
+    }
+
+    return { diffData };
   }
 
   const oldSize = Buffer.byteLength(params.oldText!, "utf8");
