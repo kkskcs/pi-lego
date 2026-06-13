@@ -45,9 +45,9 @@ export function renderDiff(input: RenderDiffInput): RenderDiffOutput {
 }
 
 function tint(theme: RendererTheme, entry: DiffEntry, text: string): string {
-  if (entry.kind === "add") return theme.bg("toolSuccessBg", theme.fg("success", text));
-  if (entry.kind === "remove") return theme.bg("toolErrorBg", theme.fg("error", text));
-  return theme.bg("toolPendingBg", theme.fg("toolOutput", text));
+  if (entry.kind === "add") return theme.bg("toolSuccessBg", theme.fg("toolDiffAdded", text));
+  if (entry.kind === "remove") return theme.bg("toolErrorBg", theme.fg("toolDiffRemoved", text));
+  return theme.bg("toolPendingBg", theme.fg("toolDiffContext", text));
 }
 
 function gutterMarker(entry: DiffEntry): string {
@@ -82,8 +82,8 @@ function inlineText(entry: DiffEntry, index: number, diffData: DiffData, theme: 
 
 function renderSpans(spans: DiffSpan[], theme: RendererTheme): string {
   return spans.map((s) => {
-    if (s.kind === "add") return theme.bold(theme.fg("success", s.text));
-    if (s.kind === "remove") return theme.bold(theme.fg("error", s.text));
+    if (s.kind === "add") return theme.bold(theme.fg("toolDiffAdded", s.text));
+    if (s.kind === "remove") return theme.bold(theme.fg("toolDiffRemoved", s.text));
     return s.text;
   }).join("");
 }
