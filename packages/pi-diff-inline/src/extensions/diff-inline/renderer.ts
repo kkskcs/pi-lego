@@ -125,7 +125,6 @@ function unifiedRows(diffData: DiffData, width: number, theme: RendererTheme): s
     }
 
     if (e.kind === "hunk") {
-      rows.push(padRight(theme.fg("dim", e.text), width));
       continue;
     }
 
@@ -135,7 +134,7 @@ function unifiedRows(diffData: DiffData, width: number, theme: RendererTheme): s
       tint: (text) => tint(theme, e, text),
     });
 
-    rows.push(...tinted);
+    rows.push(...tinted.map((l) => padRight(l, width)));
   }
 
   return rows;
@@ -179,7 +178,6 @@ function splitRows(diffData: DiffData, width: number, theme: RendererTheme): str
     }
 
     if (e.kind === "hunk") {
-      rows.push(padRight(theme.fg("dim", e.text), width));
       i++;
       continue;
     }

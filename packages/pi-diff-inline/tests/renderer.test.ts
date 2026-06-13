@@ -189,3 +189,46 @@ describe("renderDiff", () => {
     });
   });
 });
+
+  describe("hunk headers", () => {
+
+    it("does not render @@ hunk lines in split mode", () => {
+      const result = renderDiff({
+        diffData: simpleDiffData(),
+        width: 100,
+        mode: "split",
+        theme: makeTheme(),
+      });
+
+      const hunkLines = result.lines.filter((l) => l.includes("@@"));
+      expect(hunkLines).toHaveLength(0);
+    });
+
+    it("does not render @@ hunk lines in unified mode", () => {
+      const result = renderDiff({
+        diffData: simpleDiffData(),
+        width: 100,
+        mode: "unified",
+        theme: makeTheme(),
+      });
+
+      const hunkLines = result.lines.filter((l) => l.includes("@@"));
+      expect(hunkLines).toHaveLength(0);
+    });
+  });
+
+  describe("unified bg fill", () => {
+
+    it("pads every line to full width", () => {
+      const result = renderDiff({
+        diffData: simpleDiffData(),
+        width: 80,
+        mode: "unified",
+        theme: makeTheme(),
+      });
+
+      for (const line of result.lines) {
+        expect(visibleWidth(line)).toBe(80);
+      }
+    });
+  });
