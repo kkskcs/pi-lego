@@ -131,10 +131,10 @@ function unifiedRows(diffData: DiffData, width: number, theme: RendererTheme): s
     const prefix = `▌${gutterMarker(e)} ${lineNo(e)} │ `;
     const content = inlineText(e, i, diffData, theme);
     const tinted = wrapWithHangingIndent(prefix, content, width, {
-      tint: (text) => tint(theme, e, text),
+      tint: (text) => tint(theme, e, text + " ".repeat(Math.max(0, width - visibleWidth(text)))),
     });
 
-    rows.push(...tinted.map((l) => padRight(l, width)));
+    rows.push(...tinted);
   }
 
   return rows;
