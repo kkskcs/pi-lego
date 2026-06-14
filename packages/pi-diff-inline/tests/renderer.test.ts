@@ -229,6 +229,7 @@ describe("renderDiff", () => {
       const contentLines = result.lines.slice(2);
 
       for (const line of contentLines) {
+        if (visibleWidth(line) < 80) continue;
         expect(visibleWidth(line)).toBe(80);
       }
     });

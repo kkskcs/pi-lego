@@ -62,9 +62,14 @@ export default function (pi: ExtensionAPI) {
     renderResult(result: any, options: any, theme: any, _context: any) {
       const diffData = result?.details?.diffData as DiffData | undefined;
 
+      const baseBg = theme.getBgAnsi("toolPendingBg");
+
       const rendererTheme: RendererTheme = {
         fg: (style: string, text: string) => theme.fg(style, text),
-        bg: (style: string, text: string) => theme.bg(style, text),
+        bg: (style: string, text: string) => {
+          const ansi = theme.getBgAnsi(style);
+          return `${ansi}${text}${baseBg}`;
+        },
         bold: (text: string) => theme.bold?.(text) ?? text,
       };
 
