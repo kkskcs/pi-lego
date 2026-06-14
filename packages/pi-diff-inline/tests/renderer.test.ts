@@ -324,4 +324,180 @@ describe("renderDiff", () => {
       expect(result.lines[1]?.trim()).toBe("");
     });
   });
+
+  describe("file boundary markers", () => {
+
+    it("shows ^ for file starting at line 1", () => {
+      const data: DiffData = {
+        entries: [
+          { kind: "meta", text: "diff --git a/new.ts b/new.ts", filePath: "new.ts" },
+          { kind: "hunk", text: "@@ -0,0 +1,2 @@", oldStart: 0, oldCount: 0, newStart: 1, newCount: 2 },
+          { kind: "add", newLine: 1, text: "line1" },
+          { kind: "add", newLine: 2, text: "line2" },
+        ],
+        stats: { added: 2, removed: 0, context: 0 },
+      };
+
+      const result = renderDiff({ diffData: data, width: 80, mode: "unified", theme: makeTheme() });
+      const hasTopCaret = result.lines.some((l) => l.includes("^"));
+      expect(hasTopCaret).toBe(true);
+    });
+
+    it("shows $ for complete new file", () => {
+      const data: DiffData = {
+        entries: [
+          { kind: "meta", text: "diff --git a/new.ts b/new.ts", filePath: "new.ts" },
+          { kind: "hunk", text: "@@ -0,0 +1,2 @@", oldStart: 0, oldCount: 0, newStart: 1, newCount: 2 },
+          { kind: "add", newLine: 1, text: "line1" },
+          { kind: "add", newLine: 2, text: "line2" },
+        ],
+        stats: { added: 2, removed: 0, context: 0 },
+      };
+
+      const result = renderDiff({ diffData: data, width: 80, mode: "unified", theme: makeTheme() });
+      const hasBottom$ = result.lines.some((l) => l.includes("$"));
+      expect(hasBottom$).toBe(true);
+    });
+
+    it("shows ⋮ for partial file (not starting at line 1)", () => {
+      const data: DiffData = {
+        entries: [
+          { kind: "meta", text: "diff --git a/app.ts b/app.ts", filePath: "app.ts" },
+          { kind: "hunk", text: "@@ -3,3 +3,3 @@", oldStart: 3, oldCount: 3, newStart: 3, newCount: 3 },
+          { kind: "context", oldLine: 3, newLine: 3, text: "ctx" },
+          { kind: "remove", oldLine: 4, text: "old" },
+          { kind: "add", newLine: 4, text: "new" },
+          { kind: "context", oldLine: 5, newLine: 5, text: "ctx2" },
+        ],
+        stats: { added: 1, removed: 1, context: 2 },
+      };
+
+      const result = renderDiff({ diffData: data, width: 80, mode: "unified", theme: makeTheme() });
+      const hasCaret = result.lines.some((l) => l.includes("^"));
+      const hasEllipsis = result.lines.some((l) => l.includes("⋮"));
+      expect(hasCaret).toBe(false);
+      expect(hasEllipsis).toBe(true);
+    });
+
+    it("shows --- fill for ^ and $ markers", () => {
+      const data: DiffData = {
+        entries: [
+          { kind: "meta", text: "diff --git a/new.ts b/new.ts", filePath: "new.ts" },
+          { kind: "hunk", text: "@@ -0,0 +1,1 @@", oldStart: 0, oldCount: 0, newStart: 1, newCount: 1 },
+          { kind: "add", newLine: 1, text: "line1" },
+        ],
+        stats: { added: 1, removed: 0, context: 0 },
+      };
+
+      const result = renderDiff({ diffData: data, width: 80, mode: "unified", theme: makeTheme() });
+      const hasDash = result.lines.some((l) => l.includes("---"));
+      expect(hasDash).toBe(true);
+    });
+
+    it("shows ... fill for ⋮ hunk separator", () => {
+      const data: DiffData = {
+        entries: [
+          { kind: "meta", text: "diff --git a/app.ts b/app.ts", filePath: "app.ts" },
+          { kind: "hunk", text: "@@ -1,2 +1,2 @@", oldStart: 1, oldCount: 2, newStart: 1, newCount: 2 },
+          { kind: "context", oldLine: 1, newLine: 1, text: "a" },
+          { kind: "remove", oldLine: 2, text: "b" },
+          { kind: "add", newLine: 2, text: "c" },
+          { kind: "hunk", text: "@@ -10,1 +10,1 @@", oldStart: 10, oldCount: 1, newStart: 10, newCount: 1 },
+          { kind: "remove", oldLine: 10, text: "x" },
+          { kind: "add", newLine: 10, text: "y" },
+        ],
+        stats: { added: 2, removed: 2, context: 1 },
+      };
+
+      const result = renderDiff({ diffData: data, width: 80, mode: "unified", theme: makeTheme() });
+      const hasDots = result.lines.some((l) => l.includes("..."));
+      expect(hasDots).toBe(true);
+    });
+  });
+});
+
+describe("file boundary markers", () => {
+
+  function newFileDiff(): DiffData {
+    return {
+      entries: [
+        { kind: "meta", text: "diff --git a/new.ts b/new.ts", filePath: "new.ts" },
+        { kind: "meta", text: "--- /dev/null" },
+        { kind: "meta", text: "+++ b/new.ts" },
+        { kind: "hunk", text: "@@ -0,0 +1,3 @@", oldStart: 0, oldCount: 0, newStart: 1, newCount: 3 },
+        { kind: "add", text: "line1", newLine: 1 },
+        { kind: "add", text: "line2", newLine: 2 },
+        { kind: "add", text: "line3", newLine: 3 },
+      ],
+      stats: { added: 3, removed: 0 },
+    };
+  }
+
+  function modifiedFileDiff(): DiffData {
+    return {
+      entries: [
+        { kind: "meta", text: "diff --git a/mod.ts b/mod.ts", filePath: "mod.ts" },
+        { kind: "meta", text: "--- a/mod.ts" },
+        { kind: "meta", text: "+++ b/mod.ts" },
+        { kind: "hunk", text: "@@ -5,3 +5,3 @@", oldStart: 5, oldCount: 3, newStart: 5, newCount: 3 },
+        { kind: "context", text: "ctx", oldLine: 5, newLine: 5 },
+        { kind: "remove", text: "old", oldLine: 6 },
+        { kind: "add", text: "new", newLine: 6 },
+        { kind: "context", text: "ctx", oldLine: 7, newLine: 7 },
+      ],
+      stats: { added: 1, removed: 1 },
+    };
+  }
+
+  it("new file: top ^ bottom $", () => {
+    const result = renderDiff({ diffData: newFileDiff(), width: 80, mode: "unified", theme: makeTheme() });
+    const lines = result.lines;
+    const topFrame = lines.find(l => l.includes("^") && l.includes("│"));
+    const bottomFrame = lines.find(l => l.includes("$") && l.includes("│"));
+    expect(topFrame).toBeDefined();
+    expect(bottomFrame).toBeDefined();
+    expect(topFrame).toContain("---");
+    expect(bottomFrame).toContain("---");
+  });
+
+  it("modified file (not from line 1): top ⋮ bottom ⋮", () => {
+    const result = renderDiff({ diffData: modifiedFileDiff(), width: 80, mode: "unified", theme: makeTheme() });
+    const lines = result.lines;
+    const topFrame = lines.find(l => l.includes("⋮") && l.includes("│") && l.includes("..."));
+    const bottomFrame = [...lines].reverse().find(l => l.includes("⋮") && l.includes("│") && l.includes("..."));
+    expect(topFrame).toBeDefined();
+    expect(bottomFrame).toBeDefined();
+  });
+
+  it("hunk separator shows ⋮ with ...", () => {
+    const multiHunk: DiffData = {
+      entries: [
+        { kind: "meta", text: "diff --git a/f.ts b/f.ts", filePath: "f.ts" },
+        { kind: "meta", text: "--- a/f.ts" },
+        { kind: "meta", text: "+++ b/f.ts" },
+        { kind: "hunk", text: "@@ -1,2 +1,2 @@", oldStart: 1, oldCount: 2, newStart: 1, newCount: 2 },
+        { kind: "context", text: "a", oldLine: 1, newLine: 1 },
+        { kind: "remove", text: "b", oldLine: 2 },
+        { kind: "add", text: "c", newLine: 2 },
+        { kind: "hunk", text: "@@ -10,2 +10,2 @@", oldStart: 10, oldCount: 2, newStart: 10, newCount: 2 },
+        { kind: "context", text: "x", oldLine: 10, newLine: 10 },
+        { kind: "remove", text: "y", oldLine: 11 },
+        { kind: "add", text: "z", newLine: 11 },
+      ],
+      stats: { added: 2, removed: 2 },
+    };
+    const result = renderDiff({ diffData: multiHunk, width: 80, mode: "unified", theme: makeTheme() });
+    const hunkLines = result.lines.filter(l => l.includes("⋮") && l.includes("..."));
+    expect(hunkLines.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it("split mode also shows markers", () => {
+    const result = renderDiff({ diffData: newFileDiff(), width: 80, mode: "split", theme: makeTheme() });
+    const lines = result.lines;
+    const topFrame = lines.find(l => l.includes("^") && l.includes("---"));
+    const bottomFrame = lines.find(l => l.includes("$") && l.includes("---"));
+    expect(topFrame).toBeDefined();
+    expect(bottomFrame).toBeDefined();
+  });
+
 });
