@@ -500,4 +500,34 @@ describe("file boundary markers", () => {
     expect(bottomFrame).toBeDefined();
   });
 
+  it("top frame shows even without filePath meta", () => {
+    const noFilePathData: DiffData = {
+      entries: [
+        { kind: "hunk", text: "@@ -1,2 +1,2 @@", oldStart: 1, oldCount: 2, newStart: 1, newCount: 2 },
+        { kind: "context", text: "a", oldLine: 1, newLine: 1 },
+        { kind: "remove", text: "b", oldLine: 2 },
+        { kind: "add", text: "c", newLine: 2 },
+      ],
+      stats: { added: 1, removed: 1, context: 1 },
+    };
+    const result = renderDiff({ diffData: noFilePathData, width: 80, mode: "unified", theme: makeTheme() });
+    const topFrame = result.lines.find(l => l.includes("^") && l.includes("│") && l.includes("---"));
+    expect(topFrame).toBeDefined();
+  });
+
+  it("split mode top frame without filePath meta", () => {
+    const noFilePathData: DiffData = {
+      entries: [
+        { kind: "hunk", text: "@@ -1,2 +1,2 @@", oldStart: 1, oldCount: 2, newStart: 1, newCount: 2 },
+        { kind: "context", text: "a", oldLine: 1, newLine: 1 },
+        { kind: "remove", text: "b", oldLine: 2 },
+        { kind: "add", text: "c", newLine: 2 },
+      ],
+      stats: { added: 1, removed: 1, context: 1 },
+    };
+    const result = renderDiff({ diffData: noFilePathData, width: 80, mode: "split", theme: makeTheme() });
+    const topFrame = result.lines.find(l => l.includes("^") && l.includes("---"));
+    expect(topFrame).toBeDefined();
+  });
+
 });

@@ -1,4 +1,5 @@
 import type { DiffData } from "./types.js";
+import { visibleWidth, truncateToWidth, wrapTextWithAnsi } from "@earendil-works/pi-tui";
 import { renderDiff, type DiffRenderMode, type RendererTheme } from "./renderer.js";
 
 export interface DiffInlineComponentOptions {
@@ -37,7 +38,17 @@ export class DiffInlineComponent {
     const lines: string[] = [];
 
     if (this.options.label) {
-      lines.push(pad(this.options.theme.fg("toolTitle", this.options.label), width));
+      const labelText = this.options.theme.fg("toolTitle", this.options.label);
+      const vis = visibleWidth(labelText);
+
+      if (vis <= width) {
+        lines.push(labelText + " ".repeat(width - vis));
+      } else {
+        const wrapped = wrapTextWithAnsi(this.options.label, width);
+        for (const line of wrapped) {
+          lines.push(pad(this.options.theme.fg("toolTitle", line), width));
+        }
+      }
     }
 
     if (this.options.expandable && !this.options.expanded) {
@@ -69,6 +80,7 @@ export class DiffInlineComponent {
 }
 
 function pad(text: string, width: number): string {
-  if (text.length >= width) return text.slice(0, width);
-  return text + " ".repeat(width - text.length);
+  const vis = visibleWidth(text);
+  if (vis >= width) return truncateToWidth(text, width);
+  return text + " ".repeat(width - vis);
 }

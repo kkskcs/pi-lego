@@ -141,6 +141,7 @@ function padRight(line: string, width: number): string {
 function unifiedRows(diffData: DiffData, width: number, theme: RendererTheme): string[] {
   const rows: string[] = [];
   let currentFile: string | undefined;
+  let topFrameEmitted = false;
 
   const lw = String(Math.max(...diffData.entries.filter(x => "newLine" in x).map(x => (x as any).newLine || 0))).length;
 
@@ -158,6 +159,7 @@ function unifiedRows(diffData: DiffData, width: number, theme: RendererTheme): s
         const markers = fileMarkers(diffData, i + 1);
         rows.push(theme.bg("toolPendingBg", padRight(theme.fg("toolDiffContext", `▌  ${markers.top.padStart(lw)} │ `) + theme.fg("accent", fillForMarker(markers.top)), width)));
         rows.push(tint(theme, CTX_ENTRY, padRight(`▌  ${" ".repeat(lw)} │ `, width)));
+        topFrameEmitted = true;
       }
       continue;
     }
@@ -172,6 +174,12 @@ function unifiedRows(diffData: DiffData, width: number, theme: RendererTheme): s
       continue;
     }
 
+    if (!topFrameEmitted) {
+      const markers = fileMarkers(diffData, 0);
+      rows.push(theme.bg("toolPendingBg", padRight(theme.fg("toolDiffContext", `▌  ${markers.top.padStart(lw)} │ `) + theme.fg("accent", fillForMarker(markers.top)), width)));
+      rows.push(tint(theme, CTX_ENTRY, padRight(`▌  ${" ".repeat(lw)} │ `, width)));
+      topFrameEmitted = true;
+    }
     const prefix = `▌${gutterMarker(e)} ${lineNo(e).padStart(lw)} │ `;
     const hanging = `▌  ${" ".repeat(lw)} │ `;
     const content = inlineText(e, i, diffData, theme);
@@ -194,6 +202,7 @@ function splitRows(diffData: DiffData, width: number, theme: RendererTheme): str
   const rightPaneWidth = width - pane - 3;
   const rows: string[] = [];
   let currentFile: string | undefined;
+  let topFrameEmitted = false;
   const separator = " │\x1b[49m ";
 
   let maxOld = 1;
@@ -229,10 +238,16 @@ function splitRows(diffData: DiffData, width: number, theme: RendererTheme): str
         }
         currentFile = e.filePath;
         rows.push(padRight("", pane) + " │ " + padRight("", rightPaneWidth));
-        rows.push(padRight(theme.fg("accent", e.filePath), pane) + " │ ");
+        const fnVis = visibleWidth(theme.fg("accent", e.filePath));
+        if (fnVis > pane) {
+          rows.push(padRight(theme.fg("accent", e.filePath), width));
+        } else {
+          rows.push(padRight(theme.fg("accent", e.filePath), pane) + " │ ");
+        }
         const markers = fileMarkers(diffData, i + 1);
         rows.push(theme.bg("toolPendingBg", padRight(theme.fg("toolDiffContext", `▌  ${markers.top.padStart(lw)} │ `) + theme.fg("accent", fillForMarker(markers.top)), pane)) + separator + theme.bg("toolPendingBg", padRight(theme.fg("toolDiffContext", `▌  ${markers.top.padStart(rw)} │ `) + theme.fg("accent", fillForMarker(markers.top)), rightPaneWidth)));
         rows.push(tint(theme, CTX_ENTRY, padRight(`▌  ${" ".repeat(lw)} │ `, pane)) + separator + tint(theme, CTX_ENTRY, padRight(`▌  ${" ".repeat(rw)} │ `, rightPaneWidth)));
+        topFrameEmitted = true;
       }
       i++;
       continue;
@@ -249,6 +264,12 @@ function splitRows(diffData: DiffData, width: number, theme: RendererTheme): str
       continue;
     }
 
+    if (!topFrameEmitted) {
+      const markers = fileMarkers(diffData, 0);
+      rows.push(theme.bg("toolPendingBg", padRight(theme.fg("toolDiffContext", `▌  ${markers.top.padStart(lw)} │ `) + theme.fg("accent", fillForMarker(markers.top)), pane)) + separator + theme.bg("toolPendingBg", padRight(theme.fg("toolDiffContext", `▌  ${markers.top.padStart(rw)} │ `) + theme.fg("accent", fillForMarker(markers.top)), rightPaneWidth)));
+      rows.push(tint(theme, CTX_ENTRY, padRight(`▌  ${" ".repeat(lw)} │ `, pane)) + separator + tint(theme, CTX_ENTRY, padRight(`▌  ${" ".repeat(rw)} │ `, rightPaneWidth)));
+      topFrameEmitted = true;
+    }
     if (e.kind === "context") {
       const content = inlineText(e, i, diffData, theme);
       const leftPrefix = `▌  ${fmtLeft((e as any).oldLine)} │ `;

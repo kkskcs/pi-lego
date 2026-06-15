@@ -105,6 +105,7 @@ export default function (pi: ExtensionAPI) {
   });
 }
 
+
 function resolveInput(params: DiffInlineParams): { diffData?: DiffData; error?: string } {
   const hasDiffText = typeof params.diffText === "string" && params.diffText.length > 0;
   const hasTextPair = typeof params.oldText === "string" && typeof params.newText === "string";
