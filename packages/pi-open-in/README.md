@@ -1,7 +1,10 @@
 # @kkskcs/pi-open-in
 
-A [pi](https://github.com/earendil-works/pi-coding-agent) extension that opens the current working directory in another
-app — finder, a new terminal window, or a split pane.
+A [pi](https://github.com/earendil-works/pi-coding-agent) extension that opens the current working directory in another app — finder, a new terminal window, or a split pane.
+
+## Screenshot
+
+![open-in](https://raw.githubusercontent.com/kkskcs/pi-lego/develop/packages/pi-open-in/assets/open-in.png)
 
 ## Features
 
@@ -11,11 +14,19 @@ app — finder, a new terminal window, or a split pane.
 - **Fuzzy filter** — type to narrow down actions
 - Unsupported actions are hidden from the list (no dead options)
 
-## Install
+## Installation
 
 ```bash
 pi install npm:@kkskcs/pi-open-in
 ```
+
+## Usage
+
+```
+/open-in
+```
+
+Select an action from the list to open cwd in the chosen app.
 
 ## Supported Terminals
 
@@ -62,89 +73,6 @@ Explorer: `explorer <cwd>`
 2. `$WT_SESSION` → Windows Terminal
 3. `$TERM_PROGRAM` → corresponding terminal
 4. `$TERM` → fallback (kitty, alacritty)
-
-## Usage
-
-Register the extension in your pi config:
-
-```json
-{
-  "pi": {
-    "extensions": [
-      "@kkskcs/pi-open-in"
-    ]
-  }
-}
-```
-
-Then run:
-
-```
-/open-in
-```
-
-### Example: macOS + Ghostty
-
-```
-/open-in
-
-┌──────────────────────────────────────────────────────────┐
-│ > type to filter...                                      │
-│                                                          │
-│ ❯ split-down                                             │
-│   split-right                                            │
-│   split-up                                               │
-│   split-left                                             │
-│   terminal                                               │
-│   finder                                                 │
-│                                                          │
-│ ↑↓ navigate • enter select • esc cancel • type to filter │
-└──────────────────────────────────────────────────────────┘
-```
-
-Select `split-right` → opens a new Ghostty split pane to the right with cwd.
-
-### Example: Linux + tmux
-
-```
-/open-in
-
-┌──────────────────────────────────────────────────────────┐
-│ > type to filter...                                      │
-│                                                          │
-│ ❯ split-down                                             │
-│   split-right                                            │
-│   split-up                                               │
-│   split-left                                             │
-│   terminal                                               │
-│   finder                                                 │
-│                                                          │
-│ ↑↓ navigate • enter select • esc cancel • type to filter │
-└──────────────────────────────────────────────────────────┘
-```
-
-Select `terminal` → opens a new tmux window at cwd.  
-Select `finder` → runs `xdg-open` on cwd.
-
-### Example: Windows + Windows Terminal
-
-```
-/open-in
-
-┌──────────────────────────────────────────────────────────┐
-│ > type to filter...                                      │
-│                                                          │
-│ ❯ split-down                                             │
-│   split-right                                            │    
-│   terminal                                               │
-│   finder                                                 │
-│                                                          │
-│ ↑↓ navigate • enter select • esc cancel • type to filter │
-└──────────────────────────────────────────────────────────┘
-```
-
-Only `down` and `right` splits available (Windows Terminal limitation).  
-`finder` → opens Explorer.
 
 ## Development
 
