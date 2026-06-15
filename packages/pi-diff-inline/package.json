@@ -19,7 +19,8 @@
     "prepublishOnly": "tsc"
   },
   "pi": {
-    "extensions": ["./dist/extensions/diff-inline/index.js"]
+    "extensions": ["./dist/extensions/diff-inline/index.js"],
+    "image": "https://raw.githubusercontent.com/kkskcs/pi-lego/develop/packages/pi-diff-inline/assets/split.png"
   },
   "dependencies": {
     "diff": "^8.0.3"

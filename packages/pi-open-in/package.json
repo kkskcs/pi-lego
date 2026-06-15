@@ -18,7 +18,8 @@
     "prepublishOnly": "tsc"
   },
   "pi": {
-    "extensions": ["./dist/extensions/open-in/index.js"]
+    "extensions": ["./dist/extensions/open-in/index.js"],
+    "image": "https://raw.githubusercontent.com/kkskcs/pi-lego/develop/packages/pi-open-in/assets/open-in.png"
   },
   "peerDependencies": {
     "@earendil-works/pi-coding-agent": "*",
