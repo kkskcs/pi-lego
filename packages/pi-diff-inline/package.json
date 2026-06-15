@@ -1,6 +1,6 @@
 {
   "name": "@kkskcs/pi-diff-inline",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Render diffs inline in the pi conversation stream",
   "license": "MIT",
   "type": "module",

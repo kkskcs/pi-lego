@@ -26,7 +26,7 @@ Render diffs inline in the pi conversation stream. Supports unified diff text in
 ## Installation
 
 ```sh
-pi install @kkskcs/pi-diff-inline
+pi install npm:@kkskcs/pi-diff-inline
 ```
 
 ## Usage
