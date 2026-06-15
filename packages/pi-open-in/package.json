@@ -3,6 +3,11 @@
   "version": "0.1.1",
   "description": "Open current directory in finder, terminal, or split pane",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kkskcs/pi-lego",
+    "directory": "packages/pi-open-in"
+  },
   "type": "module",
   "main": "./dist/extensions/open-in/index.js",
   "types": "./dist/extensions/open-in/index.d.ts",

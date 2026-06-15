@@ -3,6 +3,11 @@
   "version": "0.1.1",
   "description": "Render diffs inline in the pi conversation stream",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kkskcs/pi-lego",
+    "directory": "packages/pi-diff-inline"
+  },
   "type": "module",
   "main": "./dist/extensions/diff-inline/index.js",
   "types": "./dist/extensions/diff-inline/index.d.ts",
