@@ -6,11 +6,11 @@ Render diffs inline in the pi conversation stream. Supports unified diff text in
 
 ### Split mode (default)
 
-![split](./assets/split.png)
+![split](https://raw.githubusercontent.com/kkskcs/pi-lego/develop/packages/pi-diff-inline/assets/split.png)
 
 ### Unified mode
 
-![unified](./assets/unified.png)
+![unified](https://raw.githubusercontent.com/kkskcs/pi-lego/develop/packages/pi-diff-inline/assets/unified.png)
 
 ## Features
 
@@ -65,3 +65,7 @@ pnpm install
 pnpm run test
 pnpm run build
 ```
+
+## Credits
+
+Renderer architecture inspired by [pi-hashline-readmap](https://github.com/coctostan/pi-hashline-readmap).
