@@ -10,6 +10,7 @@ installed independently.
 | Package                                     | Description                                               |
 |---------------------------------------------|-----------------------------------------------------------|
 | [@kkskcs/pi-open-in](./packages/pi-open-in) | Open current directory in finder, terminal, or split pane |
+| [@kkskcs/pi-diff-inline](./packages/pi-diff-inline) | Render diffs inline in the conversation stream |
 
 ## Debugging with Source
 
