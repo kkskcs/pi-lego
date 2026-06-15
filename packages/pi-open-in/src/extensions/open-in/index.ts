@@ -65,6 +65,9 @@ export default function openIn(pi: ExtensionAPI) {
         const container = new Container();
         container.addChild(new DynamicBorder((s: string) => theme.fg("accent", s)));
 
+        const titleText = new Text(theme.bold("Open in..."), 1, 0);
+        container.addChild(titleText);
+
         const queryText = new Text("", 1, 0);
         container.addChild(queryText);
 
@@ -96,7 +99,7 @@ export default function openIn(pi: ExtensionAPI) {
           });
           selectList.onSelect = (item) => done(item.value);
           selectList.onCancel = () => done(null);
-          container.children.splice(2, 0, selectList);
+          container.children.splice(3, 0, selectList);
           tui.requestRender();
         }
 
