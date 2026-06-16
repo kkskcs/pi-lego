@@ -1,6 +1,8 @@
 # @kkskcs/pi-open-in
 
-A [pi](https://github.com/earendil-works/pi-coding-agent) extension that opens the current working directory in another app — finder, a new terminal window, or a split pane.
+Open finder, terminal, or a split pane at your current session's project directory — instantly from pi.
+
+Runs as a command (`/open-in`), so there's no AI response to wait for. No terminal-specific shortcuts to memorize — just pick an action, done. Works with Ghostty, WezTerm, iTerm2, kitty, tmux, and more — one unified interface regardless of which terminal you're in.
 
 ## Screenshot
 
