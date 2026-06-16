@@ -20,7 +20,7 @@
   },
   "pi": {
     "extensions": ["./dist/extensions/diff-inline/index.js"],
-    "image": "https://raw.githubusercontent.com/kkskcs/pi-lego/develop/packages/pi-diff-inline/assets/split.png"
+    "image": "https://raw.githubusercontent.com/kkskcs/pi-lego/develop/packages/pi-diff-inline/assets/preview.png"
   },
   "dependencies": {
     "diff": "^8.0.3"
