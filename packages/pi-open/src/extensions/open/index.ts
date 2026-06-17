@@ -54,7 +54,7 @@ function fuzzyMatch(query: string, target: string): boolean {
 export default function open(pi: ExtensionAPI) {
 
   pi.registerCommand("open", {
-    description: "Open a file or directory with the default app",
+    description: "Open a file or directory with the default app (usage: /open <path>)",
     handler: async (args, ctx) => {
       const target = args.trim();
 
@@ -85,7 +85,7 @@ export default function open(pi: ExtensionAPI) {
   });
 
   pi.registerCommand("open-cwd", {
-    description: "Open current directory in another app",
+    description: "Open current directory in finder, terminal, or split pane",
     handler: async (_args, ctx) => {
       const platform = getPlatform();
       const actions = buildActions(platform);
