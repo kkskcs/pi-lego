@@ -1,4 +1,4 @@
-# @kkskcs/pi-open-in
+# @kkskcs/pi-open
 
 Open finder, terminal, or a split pane at your current session's project directory — instantly from pi.
 
@@ -6,7 +6,7 @@ Runs as a command (`/open-in`), so there's no AI response to wait for. No termin
 
 ## Screenshot
 
-![open-in](https://raw.githubusercontent.com/kkskcs/pi-lego/develop/packages/pi-open-in/assets/open-in.png)
+![open](https://raw.githubusercontent.com/kkskcs/pi-lego/develop/packages/pi-open/assets/open.png)
 
 ## Features
 
@@ -19,7 +19,7 @@ Runs as a command (`/open-in`), so there's no AI response to wait for. No termin
 ## Installation
 
 ```bash
-pi install npm:@kkskcs/pi-open-in
+pi install npm:@kkskcs/pi-open
 ```
 
 ## Usage
@@ -79,7 +79,7 @@ Explorer: `explorer <cwd>`
 ## Development
 
 ```bash
-cd packages/pi-open-in
+cd packages/pi-open
 pnpm install
 pnpm run build
 ```

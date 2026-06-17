@@ -9,7 +9,7 @@ installed independently.
 
 | Package                                     | Description                                               |
 |---------------------------------------------|-----------------------------------------------------------|
-| [@kkskcs/pi-open-in](./packages/pi-open-in) | Open current directory in finder, terminal, or split pane |
+| [@kkskcs/pi-open](./packages/pi-open) | Open current directory in finder, terminal, or split pane |
 | [@kkskcs/pi-diff-inline](./packages/pi-diff-inline) | Render diffs inline in the conversation stream |
 
 ## Debugging with Source
@@ -24,11 +24,11 @@ pnpm install
 pnpm run build
 
 # 2. Link the package you want to debug
-cd packages/pi-open-in
+cd packages/pi-open
 pnpm link --global
 
 # 3. In your pi project, link the package
-pnpm link --global @kkskcs/pi-open-in
+pnpm link --global @kkskcs/pi-open
 ```
 
 Changes in the source will be reflected after `pnpm run build`.
