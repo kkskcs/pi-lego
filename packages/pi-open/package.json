@@ -1,7 +1,7 @@
 {
   "name": "@kkskcs/pi-open",
-  "version": "0.1.3",
-  "description": "Open current directory in finder, terminal, or split pane",
+  "version": "1.0.0",
+  "description": "Open files with default app or current directory in finder, terminal, or split pane",
   "keywords": ["pi-package"],
   "license": "MIT",
   "repository": {

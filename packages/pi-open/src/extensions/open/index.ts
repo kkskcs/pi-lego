@@ -1,3 +1,6 @@
+import path from "path";
+import fs from "fs";
+
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { DynamicBorder } from "@earendil-works/pi-coding-agent";
 import { Container, SelectList, type SelectItem, Text } from "@earendil-works/pi-tui";
@@ -6,6 +9,7 @@ import type { Action, PlatformProvider } from "./types.js";
 import { darwinProvider } from "./platform/darwin.js";
 import { linuxProvider } from "./platform/linux.js";
 import { win32Provider } from "./platform/win32.js";
+import { openDefault } from "./opener.js";
 
 function getPlatform(): PlatformProvider {
   switch (process.platform) {
@@ -47,9 +51,36 @@ function fuzzyMatch(query: string, target: string): boolean {
   return qi === q.length;
 }
 
-export default function openIn(pi: ExtensionAPI) {
+export default function open(pi: ExtensionAPI) {
 
-  pi.registerCommand("open-in", {
+  pi.registerCommand("open", {
+    description: "Open a file or directory with the default app",
+    handler: async (args, ctx) => {
+      const target = args.trim();
+
+      if (!target) {
+        ctx.ui.notify("Path is required. Usage: /open <path>", "error");
+        return;
+      }
+
+      const resolved = path.resolve(ctx.cwd, target);
+
+      if (!fs.existsSync(resolved)) {
+        ctx.ui.notify(`Not found: ${resolved}`, "error");
+        return;
+      }
+
+      try {
+        await openDefault(resolved);
+        ctx.ui.notify(`Opened ${target}.`, "info");
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : String(e);
+        ctx.ui.notify(msg, "error");
+      }
+    },
+  });
+
+  pi.registerCommand("open-cwd", {
     description: "Open current directory in another app",
     handler: async (_args, ctx) => {
       const platform = getPlatform();
