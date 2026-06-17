@@ -1,6 +1,6 @@
 {
   "name": "@kkskcs/pi-open",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "Open files with default app or current directory in finder, terminal, or split pane",
   "keywords": ["pi-package"],
   "license": "MIT",
