@@ -63,7 +63,11 @@ export default function open(pi: ExtensionAPI) {
         return;
       }
 
-      const resolved = path.resolve(ctx.cwd, target);
+      let resolved = path.resolve(ctx.cwd, target);
+
+      if (!fs.existsSync(resolved) && target.startsWith("@")) {
+        resolved = path.resolve(ctx.cwd, target.slice(1));
+      }
 
       if (!fs.existsSync(resolved)) {
         ctx.ui.notify(`Not found: ${resolved}`, "error");
@@ -72,7 +76,7 @@ export default function open(pi: ExtensionAPI) {
 
       try {
         await openDefault(resolved);
-        ctx.ui.notify(`Opened ${target}.`, "info");
+        ctx.ui.notify(`Opened ${path.relative(ctx.cwd, resolved)}.`, "info");
       } catch (e) {
         const msg = e instanceof Error ? e.message : String(e);
         ctx.ui.notify(msg, "error");
