@@ -530,4 +530,48 @@ describe("file boundary markers", () => {
     expect(topFrame).toBeDefined();
   });
 
+  describe("formatFilePath", () => {
+
+    it("applies formatFilePath in unified mode", () => {
+      const result = renderDiff({
+        diffData: simpleDiffData(),
+        width: 100,
+        mode: "unified",
+        theme: makeTheme(),
+        formatFilePath: (p) => `/absolute/${p}`,
+      });
+
+      const pathLine = result.lines.find(l => l.includes("/absolute/foo.ts"));
+      expect(pathLine).toBeDefined();
+    });
+
+    it("applies formatFilePath in split mode", () => {
+      const result = renderDiff({
+        diffData: simpleDiffData(),
+        width: 100,
+        mode: "split",
+        theme: makeTheme(),
+        formatFilePath: (p) => `file://${p}`,
+      });
+
+      const pathLine = result.lines.find(l => l.includes("file://foo.ts"));
+      expect(pathLine).toBeDefined();
+    });
+
+    it("splits multiline formatFilePath result into separate rows", () => {
+      const result = renderDiff({
+        diffData: simpleDiffData(),
+        width: 100,
+        mode: "unified",
+        theme: makeTheme(),
+        formatFilePath: (p) => `${p}\nlink: file://${p}`,
+      });
+
+      const pathLines = result.lines.filter(l => l.includes("foo.ts"));
+      expect(pathLines.length).toBeGreaterThanOrEqual(2);
+      expect(pathLines.some(l => l.includes("link: file://foo.ts"))).toBe(true);
+    });
+
+  });
+
 });

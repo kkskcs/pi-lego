@@ -58,6 +58,22 @@ Provide either `diffText`, `oldText`/`newText`, or `diffs` — not multiple.
 
 The input is sent to the LLM, which interprets the request and calls `diff_inline` with appropriate parameters.
 
+### Programmatic API: `formatFilePath`
+
+When rendering diffs programmatically, pass `formatFilePath` to transform file path display:
+
+```ts
+const component = new DiffInlineComponent({
+  diffData,
+  theme,
+  expanded: true,
+  mode: "split",
+  formatFilePath: (path) => `file://${resolve(cwd, path)}`,
+});
+```
+
+The function receives the raw path string from the diff and returns the display string. Multiline results (containing `\n`) are split into separate rows automatically.
+
 ## Development
 
 ```sh

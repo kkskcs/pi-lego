@@ -9,6 +9,7 @@ export interface DiffInlineComponentOptions {
   expandable?: boolean;
   mode: DiffRenderMode;
   label?: string;
+  formatFilePath?: (path: string) => string;
 }
 
 export class DiffInlineComponent {
@@ -63,6 +64,7 @@ export class DiffInlineComponent {
       width,
       mode: this.options.mode,
       theme: this.options.theme,
+      formatFilePath: this.options.formatFilePath,
     });
 
     lines.push(...result.lines);

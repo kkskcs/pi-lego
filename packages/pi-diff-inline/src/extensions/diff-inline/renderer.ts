@@ -14,6 +14,7 @@ export type RenderDiffInput = {
   width: number;
   mode: DiffRenderMode;
   theme: RendererTheme;
+  formatFilePath?: (path: string) => string;
 };
 
 export type RenderDiffOutput = {
@@ -22,7 +23,7 @@ export type RenderDiffOutput = {
 };
 
 export function renderDiff(input: RenderDiffInput): RenderDiffOutput {
-  const { diffData, width, mode, theme } = input;
+  const { diffData, width, mode, theme, formatFilePath } = input;
 
   if (diffData.entries.length === 0) {
     return { mode, lines: [] };
@@ -36,11 +37,11 @@ export function renderDiff(input: RenderDiffInput): RenderDiffOutput {
     const pane = Math.max(10, Math.floor((width - 3) / 2));
     const rightPaneWidth = width - pane - 3;
     lines.push(padRight("old", pane) + " │ " + padRight("new", rightPaneWidth));
-    lines.push(...splitRows(diffData, width, theme));
+    lines.push(...splitRows(diffData, width, theme, formatFilePath));
     return { mode, lines };
   }
 
-  lines.push(...unifiedRows(diffData, width, theme));
+  lines.push(...unifiedRows(diffData, width, theme, formatFilePath));
   return { mode, lines };
 }
 
@@ -138,7 +139,7 @@ function padRight(line: string, width: number): string {
   return vis >= width ? line : line + " ".repeat(width - vis);
 }
 
-function unifiedRows(diffData: DiffData, width: number, theme: RendererTheme): string[] {
+function unifiedRows(diffData: DiffData, width: number, theme: RendererTheme, formatFilePath?: (path: string) => string): string[] {
   const rows: string[] = [];
   let currentFile: string | undefined;
   let topFrameEmitted = false;
@@ -155,7 +156,15 @@ function unifiedRows(diffData: DiffData, width: number, theme: RendererTheme): s
         }
         currentFile = e.filePath;
         rows.push("");
-        rows.push(theme.fg("accent", e.filePath));
+        const displayPath = formatFilePath ? formatFilePath(e.filePath) : e.filePath;
+
+        for (const line of displayPath.split("\n")) {
+          const wrapped = wrapTextWithAnsi(line, width);
+
+          for (const w of wrapped) {
+            rows.push(padRight(theme.fg("accent", w), width));
+          }
+        }
         const markers = fileMarkers(diffData, i + 1);
         rows.push(theme.bg("toolPendingBg", padRight(theme.fg("toolDiffContext", `▌  ${markers.top.padStart(lw)} │ `) + theme.fg("accent", fillForMarker(markers.top)), width)));
         rows.push(tint(theme, CTX_ENTRY, padRight(`▌  ${" ".repeat(lw)} │ `, width)));
@@ -197,7 +206,7 @@ function unifiedRows(diffData: DiffData, width: number, theme: RendererTheme): s
   return rows;
 }
 
-function splitRows(diffData: DiffData, width: number, theme: RendererTheme): string[] {
+function splitRows(diffData: DiffData, width: number, theme: RendererTheme, formatFilePath?: (path: string) => string): string[] {
   const pane = Math.max(10, Math.floor((width - 3) / 2));
   const rightPaneWidth = width - pane - 3;
   const rows: string[] = [];
@@ -238,11 +247,20 @@ function splitRows(diffData: DiffData, width: number, theme: RendererTheme): str
         }
         currentFile = e.filePath;
         rows.push(padRight("", pane) + " │ " + padRight("", rightPaneWidth));
-        const fnVis = visibleWidth(theme.fg("accent", e.filePath));
-        if (fnVis > pane) {
-          rows.push(padRight(theme.fg("accent", e.filePath), width));
-        } else {
-          rows.push(padRight(theme.fg("accent", e.filePath), pane) + " │ ");
+        const displayPath = formatFilePath ? formatFilePath(e.filePath) : e.filePath;
+
+        for (const line of displayPath.split("\n")) {
+          const wrapped = wrapTextWithAnsi(line, width);
+
+          for (const w of wrapped) {
+            const fnVis = visibleWidth(theme.fg("accent", w));
+
+            if (fnVis > pane) {
+              rows.push(padRight(theme.fg("accent", w), width));
+            } else {
+              rows.push(padRight(theme.fg("accent", w), pane) + " │ ");
+            }
+          }
         }
         const markers = fileMarkers(diffData, i + 1);
         rows.push(theme.bg("toolPendingBg", padRight(theme.fg("toolDiffContext", `▌  ${markers.top.padStart(lw)} │ `) + theme.fg("accent", fillForMarker(markers.top)), pane)) + separator + theme.bg("toolPendingBg", padRight(theme.fg("toolDiffContext", `▌  ${markers.top.padStart(rw)} │ `) + theme.fg("accent", fillForMarker(markers.top)), rightPaneWidth)));

@@ -30,3 +30,13 @@ export type DiffData = {
   stats: DiffStats;
   inlineDiffs?: InlineDiff[];
 };
+
+export type FilePath = string;
+
+/** Format string where `{path}` placeholder is replaced with the original file path (all occurrences). */
+export type FilePathFormat = string;
+
+export type FilePathPatterns = {
+  cases: Record<FilePath, FilePathFormat>;
+  default: FilePathFormat;
+};

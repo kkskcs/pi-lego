@@ -3,7 +3,7 @@ import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { parseDiff } from "./parser.js";
 import { buildDiff, mergeDiffs } from "./build-diff.js";
 import { DiffInlineComponent } from "./component.js";
-import type { DiffData } from "./types.js";
+import type { DiffData, FilePathPatterns } from "./types.js";
 import type { RendererTheme, DiffRenderMode } from "./renderer.js";
 
 const MAX_INPUT_BYTES = 10 * 1024 * 1024;
@@ -19,8 +19,12 @@ const parameters = Type.Object({
   }), { description: "Array of text pairs for multi-block comparison" })),
   label: Type.Optional(Type.String({ description: "Header label shown above the diff" })),
   contextLines: Type.Optional(Type.Number({ description: "Context lines for text-to-text mode (default: 3)" })),
-  expandable: Type.Optional(Type.Boolean({ description: "Enable Ctrl+O collapse toggle (default: false — always show full diff)" })),
+  expandable: Type.Optional(Type.Boolean({ description: "Enable Ctrl+O collapse toggle (default: false \u2014 always show full diff)" })),
   mode: Type.Optional(Type.Union([Type.Literal("split"), Type.Literal("unified")], { description: "Render mode (default: split)" })),
+  filePathPatterns: Type.Optional(Type.Object({
+    cases: Type.Optional(Type.Record(Type.String(), Type.String(), { description: "File path to display pattern mapping. {path} is replaced with the original path." })),
+    default: Type.Optional(Type.String({ description: "Default pattern with {path} placeholder" })),
+  }, { description: "File path display patterns. {path} placeholder is replaced with the original path." })),
 });
 
 type DiffInlineParams = {
@@ -32,6 +36,7 @@ type DiffInlineParams = {
   contextLines?: number;
   expandable?: boolean;
   mode?: "split" | "unified";
+  filePathPatterns?: Partial<FilePathPatterns>;
 };
 
 let globalMode: DiffRenderMode = "split";
@@ -55,7 +60,7 @@ export default function (pi: ExtensionAPI) {
       const summary = `↳ diff +${diffData!.stats.added} -${diffData!.stats.removed}`;
       return {
         content: [{ type: "text" as const, text: summary }],
-        details: { diffData: diffData!, label: params.label, expandable: params.expandable, mode: params.mode } as any,
+        details: { diffData: diffData!, label: params.label, expandable: params.expandable, mode: params.mode, filePathPatterns: params.filePathPatterns } as any,
       };
     },
 
@@ -83,6 +88,12 @@ export default function (pi: ExtensionAPI) {
         });
       }
 
+      const filePathPatterns = result?.details?.filePathPatterns as DiffInlineParams["filePathPatterns"];
+
+      const formatFilePath = filePathPatterns
+        ? (path: string) => (filePathPatterns.cases?.[path] ?? filePathPatterns.default ?? "{path}").replaceAll("{path}", path)
+        : undefined;
+
       const component = new DiffInlineComponent({
         diffData,
         theme: rendererTheme,
@@ -90,6 +101,7 @@ export default function (pi: ExtensionAPI) {
         expandable: result?.details?.expandable ?? false,
         mode: result?.details?.mode ?? globalMode,
         label: result?.details?.label,
+        formatFilePath,
       });
 
       activeComponents.add(component);
