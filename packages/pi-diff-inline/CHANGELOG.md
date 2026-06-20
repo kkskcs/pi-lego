@@ -1,8 +1,11 @@
 # Changelog
 
-## 0.1.3
+## 0.1.4
 
 - feat: add `filePathPatterns` support for custom path display
+
+## 0.1.3
+
 - chore: add gallery preview images
 
 ## 0.1.2
